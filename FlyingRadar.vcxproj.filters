@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="git">
+      <UniqueIdentifier>{4b5e7fc4-f33d-4bbe-b80b-96245832b13b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="iAllocators.cpp">
@@ -78,6 +81,9 @@
     </None>
     <None Include="ShaderFragmentOneColor.glsl">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>git</Filter>
     </None>
   </ItemGroup>
 </Project>

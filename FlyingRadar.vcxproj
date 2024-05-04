@@ -126,6 +126,7 @@
     <ClCompile Include="iReaders.cpp" />
     <ClCompile Include="iRendered.cpp" />
     <ClCompile Include="iWinSDL.cpp" />
+    <None Include=".gitignore" />
     <None Include="ShaderFragmentOneColor.glsl">
       <FileType>Document</FileType>
     </None>
