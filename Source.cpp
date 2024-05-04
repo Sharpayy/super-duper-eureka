@@ -6,6 +6,9 @@
 #include "Models.h"
 #include <gtc/matrix_transform.hpp>
 #include <functional>
+#include "Objects.h"
+
+#define RENDER_MODEL_SQUARE1 1
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
@@ -144,7 +147,6 @@ void CustomEventDispatcher(SDL_Event* e, Camera* cam)
 	}
 }
 
-
 int main(int argc, char** argv)
 {
 	WindowSDL win = WindowSDL("Test", 800, 800, SDL_WINDOW_SHOWN);
@@ -159,6 +161,7 @@ int main(int argc, char** argv)
 	const char* srcPstPrFrag = GetFileData((char*)"FragmentPostProcessingCpy.glsl")->c_str();
 	const char* srcOpaqueFrag = GetFileData((char*)"OpaqueFragmentShader.glsl")->c_str();
 	const char* srcZeroAtomic = GetFileData((char*)"AtomicZeroFeedback.glsl")->c_str();
+	const char* srcShaderOncColFrag = GetFileData((char*)"ShaderFragmentOneColor.glsl")->c_str();
 
 	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
@@ -167,6 +170,12 @@ int main(int argc, char** argv)
 	Shader<GL_FRAGMENT_SHADER> shdrPstPrFrag = Shader<GL_FRAGMENT_SHADER>(srcPstPrFrag);
 	Shader<GL_FRAGMENT_SHADER> shdrOpaqueFrag = Shader<GL_FRAGMENT_SHADER>(srcOpaqueFrag);
 	Shader<GL_COMPUTE_SHADER>  shdrCompSwapAtc = Shader<GL_COMPUTE_SHADER>(srcZeroAtomic);
+	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
+
+	Program simpleProgram = Program();
+	simpleProgram.programAddShader(shdrFrgOneColor.id);
+	simpleProgram.programAddShader(shdrVertex.id);
+	simpleProgram.programCompile();
 
 	Program swapAtomicCnt = Program();
 	swapAtomicCnt.programAddShader(shdrCompSwapAtc.id);
@@ -244,6 +253,17 @@ int main(int argc, char** argv)
 		3, 2, 6,
 		6, 7, 3
 	};
+	
+	Buffer<GL_ARRAY_BUFFER> SquareVBO = Buffer<GL_ARRAY_BUFFER>(sizeof(Square1Vertex_2d), Square1Vertex_2d, GL_STATIC_DRAW);
+	Buffer<GL_ELEMENT_ARRAY_BUFFER> SquareEBO = Buffer<GL_ELEMENT_ARRAY_BUFFER>(sizeof(Square1Indice_2d), Square1Indice_2d, GL_STATIC_DRAW);
+
+	VertexBuffer Square = VertexBuffer();
+	Square.bind();
+	SquareVBO.bind();
+	SquareEBO.bind();
+
+	Square.addAttrib(GL_FLOAT, 0, 2, sizeof(float) * 2, 0);
+	Square.enableAttrib(0);
 
 	Buffer<GL_ARRAY_BUFFER> ppcpy_planeA = Buffer<GL_ARRAY_BUFFER>(sizeof(Plane1x1VertexArrayTriangleUv), Plane1x1VertexArrayTriangleUv, GL_STATIC_DRAW);
 	VertexBuffer ppcpy_planeVB = VertexBuffer();
@@ -274,59 +294,8 @@ int main(int argc, char** argv)
 	r.setProjectionMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 	r.UpdateShaderData();
 
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, Texture2D(), 50);
 
-	int red_x, red_y, red_chn;
-	void* red_data = LoadImageData("red.png", false, &red_chn, &red_x, &red_y);
-
-	int green_x, green_y, green_chn;
-	void* green_data = LoadImageData("green.png", false, &green_chn, &green_x, &green_y);
-
-	int blue_x, blue_y, blue_chn;
-	void* blue_data = LoadImageData("blue.png", false, &blue_chn, &blue_x, &blue_y);
-
-	int vi_x, vi_y, vi_chn;
-	void* vi_data = LoadImageData("vi.png", false, &vi_chn, &vi_x, &vi_y);
-
-	int szr_x, szr_y, szr_chn;
-	void* szr_data = LoadImageData("szr.png", false, &szr_chn, &szr_x, &szr_y);
-
-	Texture2D green = Texture2D(green_data, green_x, green_y, GL_RGBA, GL_RGBA);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	green.genMipmap();
-	Texture2D red = Texture2D(red_data, red_x, red_y, GL_RGBA, GL_RGBA);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	red.genMipmap();
-	Texture2D blue = Texture2D(blue_data, blue_x, blue_y, GL_RGBA, GL_RGBA);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	blue.genMipmap();
-	Texture2D vi = Texture2D(vi_data, vi_x, vi_y, GL_RGBA, GL_RGBA);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	vi.genMipmap();
-	Texture2D szr = Texture2D(szr_data, szr_x, szr_y, GL_RGBA, GL_RGBA);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	szr.genMipmap();
-
-	r.newModel(1, vao, popaque, 36, GL_TRIANGLES, blue, 60000); // 5000
-	r.newModel(2, vao, popaque, 36, GL_TRIANGLES, green, 50);
-	r.newModel(3, vao, popaque, 36, GL_TRIANGLES, red, 60);
-	r.newModel(5, vao, popaque, 36, GL_TRIANGLES, vi, 60);
-	r.newModel(4, vao, popaque, 1, GL_POINTS, Texture2D(), 500);
-	r.newModel(10, vao, popaque, 36, GL_TRIANGLES, szr, 50);
 
 	Camera cam = Camera(vec3(0.0f, 0.0f, 0.0f));
 	r.setCameraMatrix(cam.getMatrix());
@@ -334,105 +303,69 @@ int main(int argc, char** argv)
 
 	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &cam);
 
-	uint64_t obj0, obj1;
+	uint64_t sqr0, sqr1;
 	
 #define OM(A) r.GetObjectMatrix(A)
 
-	RENDER_OBJECT_ID t0 = r.newObject(3, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
-	RENDER_OBJECT_ID t1 = r.newObject(3, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f)));
+	r.newObject(RENDER_MODEL_SQUARE1, mat4(1.0f), &sqr0);
 
-	r.SetObjectMatrix(t0, glm::rotate(OM(t0), 0.2f, glm::vec3(1, 1, 0)));
-	r.SetObjectMatrix(t1, glm::rotate(OM(t1), 0.9f, glm::vec3(0, 1, 1)));
-
-	RENDER_OBJECT_ID t2 = r.newObject(2, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.3f, -5.0f)), &obj0);
-	r.SetObjectMatrix(t2, glm::rotate(OM(t2), 0.5f, glm::vec3(1, 1, 0)));
-
-	RENDER_OBJECT_ID t3 = r.newObject(1, glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 1.3f, -14.0f)), &obj1);
-	r.SetObjectMatrix(t2, glm::rotate(OM(t2), 2.2f, glm::vec3(1, 0, 1)));
-
-	for (float i = 0.0f; i < 35.0f; i += 5.0f)
-		r.newObject(1, glm::translate(glm::mat4(1.0f), glm::vec3(-20.5f + i, 2.0f, -10.0f)));
-	
-	r.newObject(4, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f)));
-	r.newObject(4, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.1f)));
-
-	RENDER_OBJECT_ID v0 = r.newObject(5, glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.9f, -8.0f)));
-	r.SetObjectMatrix(v0, glm::rotate(OM(v0), 0.4f, glm::vec3(0, 1, 1)));
-
-	RENDER_OBJECT_ID sz0 = r.newObject(10, glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.4f, 1.9f)));
-	r.SetObjectMatrix(sz0, glm::rotate(OM(sz0), 2.2f, glm::vec3(0, 0, 1)));
-	RENDER_OBJECT_ID sz1 = r.newObject(10, glm::translate(glm::mat4(1.0f), glm::vec3(-0.2f, 0.4f, -4.9f)));
-	r.SetObjectMatrix(sz1, glm::rotate(OM(sz1), 1.35f, glm::vec3(1, 0, 1)));
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
-	LoopStatistics LS = LoopStatistics();
-	CPUPerformanceTimer CPU_T = CPUPerformanceTimer();
-	uint32_t fps = 0;
+	clock_t evLoopStart = 0;
+	clock_t evCurrTime = 0;
+	clock_t evLoopTimeTarget = 500;
 
-	clock_t time_s = clock();
-
-	RENDER_OBJECT_ID fo = r.newObject(1, glm::mat4(1.0f));
-	for (int i = 0; i < 50000; i++)
-		r.newObject(1, glm::mat4(1.0f));
-
-	clock_t time_a = clock();
-
-	for (int i = 0; i < 50000; i++)
-		r.DisableObject(fo + i);
-
-	clock_t time_e = clock();
-	glFinish();
-	printf("Disable: %d\nCreate: %d\n", time_e - time_a, time_a - time_s);
-
+	uint32_t objectList[10];
 
 	// A-Buffer
-	float z = 0;
+	uint32_t z = 0;
+	uint32_t zd = 0;
+	uint32_t st = 0;
+
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	while (true)
 	{
-		CPU_T.Start();
+		evLoopStart = clock();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-		//atmLdk.zero();
+		
 		
 		
 		r.setCameraMatrix(cam.getMatrix());
 		r.UpdateShaderDataCamera();
 
-		r.RenderSelectedModel(10);
-
-		r.RenderSelectedModel(2);
-		r.RenderSelectedModel(1);
-		r.RenderSelectedModel(5);
-		r.RenderSelectedModel(3);
+		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		
 		win.swap();
 		win.handleEvents();
 
-
-		CPU_T.End();
-		fps = CalcFps(CPU_T, &LS);
-		if (fps != 0)
+		evCurrTime += clock() - evLoopStart;
+		if (evCurrTime >= evLoopTimeTarget)
 		{
-			//atmLdk.sync(ATC_SYNC_SHADER);
-			r.BindActiveModel(5);
-			if (r.IsObjectActive(v0) == true)
+			if (z > 5)
 			{
-				r.DisableObject(v0);
-				r.DisableObjectL(obj0);
-				r.DisableObjectL(obj1);
+				z = 0;
+				st = 1;
+			}
+			if (zd > 5)
+			{
+				zd = 0;
+				st = 0;
+			}
+			if (st == 0)
+			{
+				objectList[z] = r.newObject(RENDER_MODEL_SQUARE1, translate(mat4(1.0f), vec3(0.0f, 0.0f, -0.5f * z)));
+				z++;
 			}
 			else
 			{
-				r.EnableObject(v0);
-				r.EnableObjectL(obj0);
-				r.EnableObjectL(obj1);
+				r.DisableObject(objectList[zd]);
+				r.deleteObject(RENDER_MODEL_SQUARE1, objectList[zd]);
+				zd++;
 			}
+			evCurrTime -= evLoopTimeTarget;
 		}
-		//SDL_Delay(16);
-
 
 	}
 

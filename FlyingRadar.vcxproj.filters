@@ -47,5 +47,37 @@
     <ClInclude Include="Models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Objects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AtomicZeroFeedback.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="FragmentPostProcessingCpy.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="OpaqueFragmentShader.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ShaderDisableObjectScatter.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaderFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaderVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="TransparentResolveCompute.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="VertexPostProcessing.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ShaderFragmentOneColor.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

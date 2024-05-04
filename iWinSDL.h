@@ -2,9 +2,9 @@
 #include <SDL.h>
 #include <functional>
 
-#ifdef main
-#undef main
-#endif
+//#ifdef main
+//#undef main
+//#endif
 
 class WindowSDL
 {

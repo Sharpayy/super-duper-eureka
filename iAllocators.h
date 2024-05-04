@@ -556,7 +556,7 @@ class STACK
 {
 public:
 
-	size_t c_size;
+	uint32_t c_size;
 	T* base_ptr;
 
 	STACK() {}
@@ -591,7 +591,7 @@ public:
 		c_size--;
 	}
 
-	size_t getSize()
+	uint32_t getSize()
 	{
 		return c_size;
 	}
@@ -603,7 +603,7 @@ class DynamicList
 {
 public:
 	T* base_ptr;
-	size_t c_size;
+	uint32_t c_size;
 	size_t reserved;
 
 	DynamicList() {}
