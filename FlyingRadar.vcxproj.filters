@@ -16,6 +16,9 @@
     <Filter Include="git">
       <UniqueIdentifier>{4b5e7fc4-f33d-4bbe-b80b-96245832b13b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\ShaderRenderMap">
+      <UniqueIdentifier>{d8f5cadd-8142-4824-99ea-21e0eff8e0f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="iAllocators.cpp">
@@ -84,6 +87,12 @@
     </None>
     <None Include=".gitignore">
       <Filter>git</Filter>
+    </None>
+    <None Include="ShaderVertexMap.glsl">
+      <Filter>Resource Files\ShaderRenderMap</Filter>
+    </None>
+    <None Include="ShaderFragmentMap.glsl">
+      <Filter>Resource Files\ShaderRenderMap</Filter>
     </None>
   </ItemGroup>
 </Project>

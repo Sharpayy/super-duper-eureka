@@ -20,7 +20,9 @@ layout(std430, binding = 6) buffer IDX
 	uint modelIdx[];
 };
 
+out vec2 uv_o;
 void main()
 {
 	gl_Position = matProjCamera * matModel[modelIdx[gl_InstanceID]] * vec4(pos, 0.0, 1.0);
+	uv_o = uv_c;
 }

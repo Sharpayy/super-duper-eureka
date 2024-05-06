@@ -127,9 +127,11 @@
     <ClCompile Include="iRendered.cpp" />
     <ClCompile Include="iWinSDL.cpp" />
     <None Include=".gitignore" />
+    <None Include="ShaderFragmentMap.glsl" />
     <None Include="ShaderFragmentOneColor.glsl">
       <FileType>Document</FileType>
     </None>
+    <None Include="ShaderVertexMap.glsl" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>

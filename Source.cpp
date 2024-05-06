@@ -8,11 +8,52 @@
 #include <functional>
 #include "Objects.h"
 
+uint32_t ulMapScale;
+uint32_t ulMapMove;
+uint32_t prgmRenderMap;
+
+uint32_t MapSizeX;
+uint32_t MapSizeY;
+
+uint32_t MapCx;
+uint32_t MapCy;
+uint32_t MapSs;
+float MapFs;
+
+float MapScaleFactor = 1.2f;
+
+using namespace glm;
+
+void SetMapScale(float scale)
+{
+	glUseProgram(prgmRenderMap);
+	glUniform1f(ulMapScale, scale);
+}
+
+void SetMapPosition(vec2 p)
+{
+	glUseProgram(prgmRenderMap);
+	glUniform2f(ulMapMove, p.x, p.y);
+}
+
+void SetMapPscale(float p)
+{
+	// mapx*s = p
+	// s = p / mapx
+	SetMapScale(p / MapSizeX);
+}
+
+void SetMapPposition(vec2 p)
+{
+	// MapX*s = 100
+	// s = 100 / Mapx
+	SetMapPosition(p / vec2(MapSizeX, MapSizeY));
+}
+
 #define RENDER_MODEL_SQUARE1 1
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
-using namespace glm;
 
 class Camera
 {
@@ -125,25 +166,49 @@ void CustomEventDispatcher(SDL_Event* e, Camera* cam)
 	if (e->type == SDL_QUIT)
 		exit(0);
 
+	float vis = MapScaleFactor;
+
 	if (e->type == SDL_KEYDOWN)
 	{
-		if (e->key.keysym.sym == SDLK_UP)
-			cam->addPitch(-pd);
-		if (e->key.keysym.sym == SDLK_DOWN)
-			cam->addPitch(pd);
-		if (e->key.keysym.sym == SDLK_RIGHT)
-			cam->addYaw(-yd);
-		if (e->key.keysym.sym == SDLK_LEFT)
-			cam->addYaw(yd);
+		if (e->key.keysym.sym == SDLK_q)
+		{
+			uint32_t dsxc = MapSizeX * MapFs;
+			uint32_t dsyc = MapSizeY * MapFs;
+
+			MapFs *= vis;
+
+			uint32_t dsxn = MapSizeX * MapFs;
+			uint32_t dsyn = MapSizeY * MapFs;
+
+			MapCx -= (dsxn - dsxc) / 2.0f;
+			MapCy -= (dsyn - dsyc) / 2.0f;
+		}
+		if (e->key.keysym.sym == SDLK_e)
+		{
+			uint32_t dsxc = MapSizeX * MapFs;
+			uint32_t dsyc = MapSizeY * MapFs;
+
+			MapFs /= vis;
+
+			uint32_t dsxn = MapSizeX * MapFs;
+			uint32_t dsyn = MapSizeY * MapFs;
+
+			MapCx += (dsxc - dsxn) / 2.0f;
+			MapCy += (dsyc - dsyn) / 2.0f;
+		}
 
 		if (e->key.keysym.sym == SDLK_w)
-			cam->posAddFront(ms);
+			MapCy += 20;
 		if (e->key.keysym.sym == SDLK_s)
-			cam->posAddFront(-ms);
+			MapCy -= 20;
 		if (e->key.keysym.sym == SDLK_d)
-			cam->posAddRight(-ms);
+			MapCx += 20;
 		if (e->key.keysym.sym == SDLK_a)
-			cam->posAddRight(ms);
+			MapCx -= 20;
+		
+		SetMapPposition(vec2(MapCx, MapCy));
+		//SetMapPscale((float)MapSs);
+		SetMapScale(MapFs);
 	}
 }
 
@@ -208,6 +273,12 @@ int main(int argc, char** argv)
 	prgmc.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
 	printf("%s\n", debugInfo);
 
+	simpleProgram.use();
+	BindSampler("image0", 0, simpleProgram.id);
+	ulMapScale = glGetUniformLocation(simpleProgram.id, "MapScale");
+	ulMapMove = glGetUniformLocation(simpleProgram.id, "MapMove");
+	prgmRenderMap = simpleProgram.id;
+
 	// ppcpy setup
 	ppcpy.use();
 	BindSampler("image0", 0, ppcpy.id);
@@ -218,43 +289,7 @@ int main(int argc, char** argv)
 	popaque.use();
 	BindSampler("image0", 0, popaque.id);
 
-
-	float vertexModel[] = 
-	{
-	-1.0, -1.0,  1.0, 0.0f, 0.0f,
-	 1.0, -1.0,  1.0, 1.0f, 0.0f, 
-	 1.0,  1.0,  1.0, 1.0f, 1.0f,
-	-1.0,  1.0,  1.0, 0.0f, 1.0f,
-	// back
-	-1.0, -1.0, -1.0, 0.0f, 0.0f,
-	 1.0, -1.0, -1.0, 1.0f, 0.0f,
-	 1.0,  1.0, -1.0, 1.0f, 1.0f,
-	-1.0,  1.0, -1.0, 0.0f, 1.0f
-	};
-
-	uint32_t indiceModel[] =
-	{
-		// front colors
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	};
-	
-	Buffer<GL_ARRAY_BUFFER> SquareVBO = Buffer<GL_ARRAY_BUFFER>(sizeof(Square1Vertex_2d), Square1Vertex_2d, GL_STATIC_DRAW);
+	Buffer<GL_ARRAY_BUFFER> SquareVBO = Buffer<GL_ARRAY_BUFFER>(sizeof(Square11VertexUv_2d), Square11VertexUv_2d, GL_STATIC_DRAW);
 	Buffer<GL_ELEMENT_ARRAY_BUFFER> SquareEBO = Buffer<GL_ELEMENT_ARRAY_BUFFER>(sizeof(Square1Indice_2d), Square1Indice_2d, GL_STATIC_DRAW);
 
 	VertexBuffer Square = VertexBuffer();
@@ -262,8 +297,10 @@ int main(int argc, char** argv)
 	SquareVBO.bind();
 	SquareEBO.bind();
 
-	Square.addAttrib(GL_FLOAT, 0, 2, sizeof(float) * 2, 0);
+	Square.addAttrib(GL_FLOAT, 0, 2, sizeof(float) * 4, 0);
+	Square.addAttrib(GL_FLOAT, 1, 2, sizeof(float) * 4, 8);
 	Square.enableAttrib(0);
+	Square.enableAttrib(1);
 
 	Buffer<GL_ARRAY_BUFFER> ppcpy_planeA = Buffer<GL_ARRAY_BUFFER>(sizeof(Plane1x1VertexArrayTriangleUv), Plane1x1VertexArrayTriangleUv, GL_STATIC_DRAW);
 	VertexBuffer ppcpy_planeVB = VertexBuffer();
@@ -274,27 +311,32 @@ int main(int argc, char** argv)
 	ppcpy_planeVB.enableAttrib(0);
 	ppcpy_planeVB.enableAttrib(1);
 
-
-	Buffer<GL_ARRAY_BUFFER> vbo = Buffer<GL_ARRAY_BUFFER>(sizeof(vertexModel), vertexModel, GL_STATIC_DRAW);
-	Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo = Buffer<GL_ELEMENT_ARRAY_BUFFER>(sizeof(indiceModel), indiceModel, GL_STATIC_DRAW);
-
-	VertexBuffer vao = VertexBuffer();
-	vao.bind();
-	vbo.bind();
-	ebo.bind();
-	vao.addAttrib(GL_FLOAT, 0, 3, 20, 0);
-	vao.enableAttrib(0);
-	vao.addAttrib(GL_FLOAT, 1, 2, 20, 12);
-	vao.enableAttrib(1);
-	glBindVertexArray(0);
 	
 
 	RenderGL r = RenderGL(100);
 	r.setCameraMatrix(glm::mat4(1.0f));
-	r.setProjectionMatrix(glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+	r.setProjectionMatrix(glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f));
 	r.UpdateShaderData();
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, Texture2D(), 50);
+	int x, y, c;
+	uint8_t* MapTextureData = (uint8_t*)LoadImageData("ukMap.png", 1, &c, &x, &y);
+	Texture2D MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	MapTexture.genMipmap();
+
+	MapSizeX = x;
+	MapSizeY = y;
+	MapCx = 0;
+	MapCy = 0;
+	MapSs = 1000;
+	MapFs = 1.0f;
+
+	FreeImageData(MapTextureData);
+
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
 
 
 	Camera cam = Camera(vec3(0.0f, 0.0f, 0.0f));
@@ -314,57 +356,55 @@ int main(int argc, char** argv)
 
 	clock_t evLoopStart = 0;
 	clock_t evCurrTime = 0;
-	clock_t evLoopTimeTarget = 500;
-
-	uint32_t objectList[10];
-
-	// A-Buffer
-	uint32_t z = 0;
-	uint32_t zd = 0;
-	uint32_t st = 0;
+	clock_t evLoopTimeTarget = 1000;
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+
+	mat4 CameraMatrix = lookAt(vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	r.setCameraMatrix(CameraMatrix);
+	r.UpdateShaderDataCamera();
+	
+	SetMapScale(1.0f);
+	SetMapPosition(vec2(0.0f));
+
+	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
+	PerformanceTimer RenderElapsedTime = PerformanceTimer();
+	RenderElapsedTime.Reset();
+	LoopElapsedTime.Reset();
+	uint32_t lp = 0;
+
+	int64_t SumRenderTime = 0;
 	while (true)
 	{
 		evLoopStart = clock();
+		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		
-		
-		r.setCameraMatrix(cam.getMatrix());
-		r.UpdateShaderDataCamera();
 
+		RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		RenderElapsedTime.TimeEnd();
 		
 		win.swap();
 		win.handleEvents();
 
+		lp++;
+		LoopElapsedTime.End();
 		evCurrTime += clock() - evLoopStart;
+		SumRenderTime += RenderElapsedTime.GetElapsedTime();
 		if (evCurrTime >= evLoopTimeTarget)
 		{
-			if (z > 5)
-			{
-				z = 0;
-				st = 1;
-			}
-			if (zd > 5)
-			{
-				zd = 0;
-				st = 0;
-			}
-			if (st == 0)
-			{
-				objectList[z] = r.newObject(RENDER_MODEL_SQUARE1, translate(mat4(1.0f), vec3(0.0f, 0.0f, -0.5f * z)));
-				z++;
-			}
-			else
-			{
-				r.DisableObject(objectList[zd]);
-				r.deleteObject(RENDER_MODEL_SQUARE1, objectList[zd]);
-				zd++;
-			}
+			
+			char NewWinTitle[64];
+			SumRenderTime = SumRenderTime / 1000000;
+			
+			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
+
+			SDL_SetWindowTitle(win.win, NewWinTitle);
 			evCurrTime -= evLoopTimeTarget;
+			lp = 0;
+			SumRenderTime = 0;
 		}
 
 	}
