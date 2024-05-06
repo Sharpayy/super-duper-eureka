@@ -144,8 +144,7 @@ void CustomEventDispatcher(SDL_Event* e, Camera* cam)
 	}
 }
 
-
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	WindowSDL win = WindowSDL("Test", 800, 800, SDL_WINDOW_SHOWN);
 	win.glCreateContext();

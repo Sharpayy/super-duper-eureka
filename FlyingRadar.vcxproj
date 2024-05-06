@@ -67,6 +67,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <ExternalIncludePath>C:\Users\Piotr\Desktop\libs\stb;C:\Users\Piotr\Desktop\libs\glm\glm\glm;C:\Users\Piotr\Desktop\libs\glew-2.1.0\lib\Release\x64;C:\Users\Piotr\Desktop\libs\glew-2.1.0\include\GL;C:\Users\Piotr\Desktop\libs\SDL2-2.24.1\SDL2-2.24.1\include;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>C:\Users\Piotr\Desktop\libs\glew-2.1.0\lib\Release\x64;C:\Users\Piotr\Desktop\libs\SDL2-2.24.1\SDL2-2.24.1\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -92,6 +94,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
