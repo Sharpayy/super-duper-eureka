@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="git">
+      <UniqueIdentifier>{4b5e7fc4-f33d-4bbe-b80b-96245832b13b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\ShaderRenderMap">
+      <UniqueIdentifier>{d8f5cadd-8142-4824-99ea-21e0eff8e0f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="iAllocators.cpp">
@@ -47,5 +53,46 @@
     <ClInclude Include="Models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Objects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AtomicZeroFeedback.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="FragmentPostProcessingCpy.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="OpaqueFragmentShader.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ShaderDisableObjectScatter.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaderFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaderVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="TransparentResolveCompute.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="VertexPostProcessing.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ShaderFragmentOneColor.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>git</Filter>
+    </None>
+    <None Include="ShaderVertexMap.glsl">
+      <Filter>Resource Files\ShaderRenderMap</Filter>
+    </None>
+    <None Include="ShaderFragmentMap.glsl">
+      <Filter>Resource Files\ShaderRenderMap</Filter>
+    </None>
   </ItemGroup>
 </Project>

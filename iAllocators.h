@@ -591,7 +591,7 @@ public:
 		c_size--;
 	}
 
-	size_t getSize()
+	uint32_t getSize()
 	{
 		return c_size;
 	}

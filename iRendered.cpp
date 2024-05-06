@@ -5,6 +5,7 @@ uint32_t POOLPAGE_MEDIUM_NEW_ALLOCATE = 8;
 POOLMEDIUMPAGES poolAllocator = POOLMEDIUMPAGES(64, 32, sizeof(RenderModel));
 PerformanceTimer RenderGlobalTimer = GetEmptyTimer();
 
+
 void iinit()
 {
 	glewInit();
@@ -312,6 +313,7 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat)
 
 	DoubleInt32 spaceIdIdx = GetFreeMdIdSpaceIndex();
 
+
 	rmd->matrixId = spaceIdIdx.b;
 	rmd->model = s_mat;
 	rmd->render = true;
@@ -413,8 +415,8 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 		BindActiveModel(m_id);
 
 
-	uint32_t lastObjIdx = MapToObjectIdx(md->objects.at(md->objAmount - 1)->objectId);
-	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t lastObjIdx = MapToObjectIdx(md->objects.at(md->objAmount - 1)->objectId); // 9
+	uint32_t cObjectIdx = MapToObjectIdx(o_id); // 9
 
 	RenderModelDetails* obj = GetMdObject(cObjectIdx);
 
@@ -423,12 +425,13 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 	//uint32_t obj_index = MapToObjectIdx(o_id);
 	//uint32_t swapObjIndex = md->objects.c_size - 1;
+	uint32_t MtxId = obj->matrixId;
 
-	SwapObjectOrder(cObjectIdx, lastObjIdx);
-	SwapObjectIdxOrder(obj->objectId, o_id);
-	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
+	SwapObjectOrder(cObjectIdx, lastObjIdx); //9, 9
+	SwapObjectIdxOrder(obj->objectId, o_id); //1, 1
+	//SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);// 9, 9
 
-	NotifyFreeIdx(cObjectIdx, obj->matrixId);
+	NotifyFreeIdx(o_id, MtxId); // cObjectIdx
 	// delete object from pool
 	md->objects.del_last();
 	md->objAmount--;
@@ -533,7 +536,7 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 
 	md->activeObjects--;
 	obj->render = false;
-	//SwapObjectOrder(cObjectIdx, lastObjIdx);
+	//SwapObjectOrder(cObjectIdx, lastObjIdx);// !!!!!
 	//SwapObjectIdxOrder(obj->objectId, o_id);
 	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx); //*
 }
@@ -652,6 +655,7 @@ void RenderGL::SetObjectMatrixMem(uint32_t idx, glm::mat4 mat)
 uint32_t RenderGL::MapToObjectIdx(uint32_t id)
 {
 	return md->objectsId.at(id);
+	//return md->dlIndexSpace.at(id);
 }
 
 uint32_t RenderGL::MapToIndexSpace(uint32_t idx)
