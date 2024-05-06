@@ -7,50 +7,42 @@
 #include <gtc/matrix_transform.hpp>
 #include <functional>
 #include "Objects.h"
-
-uint32_t ulMapScale;
-uint32_t ulMapMove;
-uint32_t prgmRenderMap;
-
-uint32_t MapSizeX;
-uint32_t MapSizeY;
-
-uint32_t MapCx;
-uint32_t MapCy;
-uint32_t MapSs;
-float MapFs;
-
-float MapScaleFactor = 1.2f;
+#include <stb_image.h>
 
 using namespace glm;
+#define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
 
-void SetMapScale(float scale)
+typedef struct _RenderableMapSettings
 {
-	glUseProgram(prgmRenderMap);
-	glUniform1f(ulMapScale, scale);
-}
+	float MoveX;
+	float MoveY;
+	float ScaleX;
+	float ScaleY;
 
-void SetMapPosition(vec2 p)
-{
-	glUseProgram(prgmRenderMap);
-	glUniform2f(ulMapMove, p.x, p.y);
-}
+	mat4 CameraMatrix;
+	mat4 ScaleMatrix;
+	uint32_t NeedUpdate;
 
-void SetMapPscale(float p)
-{
-	// mapx*s = p
-	// s = p / mapx
-	SetMapScale(p / MapSizeX);
-}
+} RenderableMapSettings;
 
-void SetMapPposition(vec2 p)
-{
-	// MapX*s = 100
-	// s = 100 / Mapx
-	SetMapPosition(p / vec2(MapSizeX, MapSizeY));
-}
+// settings
+
+uint32_t BaseIconScale = 10.0f;
+float CurrIconScale = 1.0f;
+mat4 BaseIconScaleMatrix = scale(mat4(1.0f), vec3(BaseIconScale));
+
+float scale_factor = 1.2f;
+float move_factor = 20.0f;
+
+// settings
+
+
+uint32_t ScreenWidth = 800;
+uint32_t ScreenHeigth = 800;
+
 
 #define RENDER_MODEL_SQUARE1 1
+#define RENDER_MODEL_HELICOPTER 2
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
@@ -159,56 +151,39 @@ public:
 	vec3 r, u, f;
 };
 
-void CustomEventDispatcher(SDL_Event* e, Camera* cam)
+void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 {
-	float pd = 0.05f, yd = 0.05f;
-	float ms = 0.1f;
 	if (e->type == SDL_QUIT)
 		exit(0);
-
-	float vis = MapScaleFactor;
 
 	if (e->type == SDL_KEYDOWN)
 	{
 		if (e->key.keysym.sym == SDLK_q)
 		{
-			uint32_t dsxc = MapSizeX * MapFs;
-			uint32_t dsyc = MapSizeY * MapFs;
-
-			MapFs *= vis;
-
-			uint32_t dsxn = MapSizeX * MapFs;
-			uint32_t dsyn = MapSizeY * MapFs;
-
-			MapCx -= (dsxn - dsxc) / 2.0f;
-			MapCy -= (dsyn - dsyc) / 2.0f;
+			MapSettings->ScaleX /= scale_factor;
+			MapSettings->ScaleY /= scale_factor;
+			CurrIconScale /= 1.05;
 		}
 		if (e->key.keysym.sym == SDLK_e)
 		{
-			uint32_t dsxc = MapSizeX * MapFs;
-			uint32_t dsyc = MapSizeY * MapFs;
-
-			MapFs /= vis;
-
-			uint32_t dsxn = MapSizeX * MapFs;
-			uint32_t dsyn = MapSizeY * MapFs;
-
-			MapCx += (dsxc - dsxn) / 2.0f;
-			MapCy += (dsyc - dsyn) / 2.0f;
+			MapSettings->ScaleX *= scale_factor;
+			MapSettings->ScaleY *= scale_factor;
+			CurrIconScale *= 1.05;
 		}
 
+		MapSettings->ScaleMatrix = scale(mat4(1.0f), vec3(MapSettings->ScaleX, MapSettings->ScaleY, 0.0f));
+
 		if (e->key.keysym.sym == SDLK_w)
-			MapCy += 20;
+			MapSettings->MoveY += move_factor;
 		if (e->key.keysym.sym == SDLK_s)
-			MapCy -= 20;
+			MapSettings->MoveY -= move_factor;
 		if (e->key.keysym.sym == SDLK_d)
-			MapCx += 20;
+			MapSettings->MoveX += move_factor;
 		if (e->key.keysym.sym == SDLK_a)
-			MapCx -= 20;
-		
-		SetMapPposition(vec2(MapCx, MapCy));
-		//SetMapPscale((float)MapSs);
-		SetMapScale(MapFs);
+			MapSettings->MoveX -= move_factor;
+
+		MapSettings->CameraMatrix = lookAt(vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f), vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
+		MapSettings->NeedUpdate = 1;
 	}
 }
 
@@ -227,6 +202,8 @@ int main(int argc, char** argv)
 	const char* srcOpaqueFrag = GetFileData((char*)"OpaqueFragmentShader.glsl")->c_str();
 	const char* srcZeroAtomic = GetFileData((char*)"AtomicZeroFeedback.glsl")->c_str();
 	const char* srcShaderOncColFrag = GetFileData((char*)"ShaderFragmentOneColor.glsl")->c_str();
+	const char* srcShaderIconVertex = GetFileData((char*)"ShaderVertexIcon.glsl")->c_str();
+	const char* srcShaderIconFragment = GetFileData((char*)"ShaderFragmentIcon.glsl")->c_str();
 
 	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
@@ -236,6 +213,13 @@ int main(int argc, char** argv)
 	Shader<GL_FRAGMENT_SHADER> shdrOpaqueFrag = Shader<GL_FRAGMENT_SHADER>(srcOpaqueFrag);
 	Shader<GL_COMPUTE_SHADER>  shdrCompSwapAtc = Shader<GL_COMPUTE_SHADER>(srcZeroAtomic);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
+	Shader<GL_FRAGMENT_SHADER> shdrFrgIcon = Shader<GL_FRAGMENT_SHADER>(srcShaderIconFragment);
+	Shader<GL_VERTEX_SHADER>   shdrVertIcon = Shader<GL_VERTEX_SHADER>(srcShaderIconVertex);
+
+	Program iconProgram = Program();
+	iconProgram.programAddShader(shdrFrgIcon.id);
+	iconProgram.programAddShader(shdrVertIcon.id);
+	iconProgram.programCompile();
 
 	Program simpleProgram = Program();
 	simpleProgram.programAddShader(shdrFrgOneColor.id);
@@ -273,11 +257,13 @@ int main(int argc, char** argv)
 	prgmc.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
 	printf("%s\n", debugInfo);
 
+	iconProgram.use();
+	BindSampler("image0", 0, iconProgram.id);
+	uint32_t ulIconScale = glGetUniformLocation(iconProgram.id, "uIconScale");
+	glUniform1f(ulIconScale, 1.0f);
+
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
-	ulMapScale = glGetUniformLocation(simpleProgram.id, "MapScale");
-	ulMapMove = glGetUniformLocation(simpleProgram.id, "MapMove");
-	prgmRenderMap = simpleProgram.id;
 
 	// ppcpy setup
 	ppcpy.use();
@@ -315,8 +301,11 @@ int main(int argc, char** argv)
 
 	RenderGL r = RenderGL(100);
 	r.setCameraMatrix(glm::mat4(1.0f));
-	r.setProjectionMatrix(glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f));
+	//r.setProjectionMatrix(glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f));
+	r.setProjectionMatrix(glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f));
 	r.UpdateShaderData();
+
+	stbi_set_flip_vertically_on_load(true);
 
 	int x, y, c;
 	uint8_t* MapTextureData = (uint8_t*)LoadImageData("ukMap.png", 1, &c, &x, &y);
@@ -327,30 +316,43 @@ int main(int argc, char** argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	MapTexture.genMipmap();
 
-	MapSizeX = x;
-	MapSizeY = y;
-	MapCx = 0;
-	MapCy = 0;
-	MapSs = 1000;
-	MapFs = 1.0f;
+	FreeImageData(MapTextureData);
+
+	MapTextureData = (uint8_t*)LoadImageData("heli.png", 0, &c, &x, &y);
+	Texture2D HeliTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	MapTexture.genMipmap();
 
 	FreeImageData(MapTextureData);
 
 	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
+	r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 50);
 
+	RenderableMapSettings MapSetting;
+	MapSetting.MoveX = 0.0f;
+	MapSetting.MoveY = 0.0f;
+	MapSetting.ScaleX = ScreenWidth  / 2.0f;
+	MapSetting.ScaleY = ScreenHeigth / 2.0f;
+	MapSetting.CameraMatrix = lookAt(vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f), vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
+	MapSetting.ScaleMatrix = scale(mat4(1.0f), vec3(MapSetting.ScaleX, MapSetting.ScaleY, 0.0f));
+	MapSetting.NeedUpdate = 0;
 
-	Camera cam = Camera(vec3(0.0f, 0.0f, 0.0f));
-	r.setCameraMatrix(cam.getMatrix());
+	r.setCameraMatrix(MapSetting.CameraMatrix);
 	r.UpdateShaderDataCamera();
 
-	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &cam);
 
-	uint64_t sqr0, sqr1;
+
+	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
 	
 #define OM(A) r.GetObjectMatrix(A)
 
-	r.newObject(RENDER_MODEL_SQUARE1, mat4(1.0f), &sqr0);
 
+	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, MapSetting.ScaleMatrix);
+	r.newObject(RENDER_MODEL_HELICOPTER, translate(BaseIconScaleMatrix, vec3(0.0f, 0.0f, 0.05f)));
+	
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -360,13 +362,6 @@ int main(int argc, char** argv)
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-
-	mat4 CameraMatrix = lookAt(vec3(0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	r.setCameraMatrix(CameraMatrix);
-	r.UpdateShaderDataCamera();
-	
-	SetMapScale(1.0f);
-	SetMapPosition(vec2(0.0f));
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
 	PerformanceTimer RenderElapsedTime = PerformanceTimer();
@@ -384,9 +379,20 @@ int main(int argc, char** argv)
 
 		RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		RenderElapsedTime.TimeEnd();
-		
+
+		if (MapSetting.NeedUpdate == 1)
+		{
+			MapSetting.NeedUpdate = 0;
+			r.setCameraMatrix(MapSetting.CameraMatrix);
+			r.BindActiveModel(RENDER_MODEL_SQUARE1);
+			r.SetObjectMatrix(MapRenderObject, MapSetting.ScaleMatrix, true);
+			r.UpdateShaderDataCamera();
+			glUniform1f(ulIconScale, CurrIconScale);
+		}
 		win.swap();
+
 		win.handleEvents();
 
 		lp++;

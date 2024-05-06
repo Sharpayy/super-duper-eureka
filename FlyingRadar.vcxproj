@@ -122,19 +122,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Aircraft.cpp" />
     <ClCompile Include="iAllocators.cpp" />
     <ClCompile Include="iReaders.cpp" />
     <ClCompile Include="iRendered.cpp" />
     <ClCompile Include="iWinSDL.cpp" />
     <None Include=".gitignore" />
-    <None Include="ShaderFragmentMap.glsl" />
+    <None Include="ShaderFragmentIcon.glsl" />
     <None Include="ShaderFragmentOneColor.glsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="ShaderVertexMap.glsl" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Aircraft.h" />
     <ClInclude Include="iAllocators.h" />
     <ClInclude Include="iReaders.h" />
     <ClInclude Include="iRendered.h" />
@@ -149,6 +150,7 @@
     <None Include="ShaderDisableObjectScatter.glsl" />
     <None Include="shaderFragment.glsl" />
     <None Include="shaderVertex.glsl" />
+    <None Include="ShaderVertexIcon.glsl" />
     <None Include="TransparentResolveCompute.glsl" />
     <None Include="VertexPostProcessing.glsl" />
   </ItemGroup>

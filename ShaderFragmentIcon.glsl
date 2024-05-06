@@ -11,14 +11,12 @@ layout(std140, binding = 1) uniform MVP_DATA
 
 uniform sampler2D image0;
 
-
 out vec4 FragColor;
 in vec2 uv_o;
 
 void main()
 {
 
-	//vec4 renderColor = vec4(1.0, 0.0, 0.2, 1.0);
 	vec4 renderColor = texture(image0, uv_o);
 	
 	if (renderColor.w < 0.1)

@@ -356,7 +356,7 @@ public:
 	void deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id);
 
 	void SyncObjectMatrix(RENDER_MODEL_ID o_id);
-	void SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat);
+	void SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat, bool just_in_vram);
 	glm::mat4 GetObjectMatrix(RENDER_MODEL_ID o_id);
 
 	void EnableObject(uint32_t m_id, RENDER_OBJECT_ID o_id);

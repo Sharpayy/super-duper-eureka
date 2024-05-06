@@ -446,10 +446,12 @@ void RenderGL::SyncObjectMatrix(RENDER_MODEL_ID o_id)
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, SIZEOF_MAT4 * obj->matrixId, SIZEOF_MAT4, &obj->model[0].x);
 }
 
-void RenderGL::SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat)
+void RenderGL::SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat, bool just_in_vram = false)
 {
 	RenderModelDetails* obj = GetMdObject(MapToObjectIdx(o_id));
-	obj->model = mat;
+	if (just_in_vram == 0)
+		obj->model = mat;
+
 	if (obj->render == true)
 	{
 		md->matrixSSBO.bind();
