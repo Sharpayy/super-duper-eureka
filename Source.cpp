@@ -1,16 +1,4 @@
-#include <cstdio>
-#include "iWinSDL.h"
-#include "iRendered.h"
-#include "iReaders.h"
-#include <ctime>
-#include "Models.h"
-#include <gtc/matrix_transform.hpp>
-#include <functional>
-#include "Objects.h"
-#include <stb_image.h>
-
-//Additional
-#include "perlin.h"
+#include "AManager.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
@@ -42,10 +30,6 @@ float move_factor = 20.0f;
 
 uint32_t ScreenWidth = 800;
 uint32_t ScreenHeigth = 800;
-
-
-#define RENDER_MODEL_SQUARE1 1
-#define RENDER_MODEL_HELICOPTER 2
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];

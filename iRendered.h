@@ -323,6 +323,8 @@ typedef uint32_t RENDER_MODEL_ID;
 class RenderGL
 {
 public:
+	RenderGL() = default;
+
 	DynamicList<RenderModel*> models;
 	STACK<RenderEvent> events;
 
