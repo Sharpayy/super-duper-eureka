@@ -1,13 +1,4 @@
-#include <cstdio>
-#include "iWinSDL.h"
-#include "iRendered.h"
-#include "iReaders.h"
-#include <ctime>
-#include "Models.h"
-#include <gtc/matrix_transform.hpp>
-#include <functional>
-#include "Objects.h"
-#include <stb_image.h>
+#include "AManager.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
@@ -39,10 +30,6 @@ float move_factor = 20.0f;
 
 uint32_t ScreenWidth = 800;
 uint32_t ScreenHeigth = 800;
-
-
-#define RENDER_MODEL_SQUARE1 1
-#define RENDER_MODEL_HELICOPTER 2
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
@@ -376,6 +363,33 @@ int main(int argc, char** argv)
 	uint32_t lp = 0;
 
 	int64_t SumRenderTime = 0;
+
+	PerlinNoiseGenerator generator;
+	float x1, y1;
+	int w, h, idx;
+	w = 100;
+	h = 100;
+	float s = 0.1f;
+
+	int size = w * h;
+	char* texArr = new char[size];
+	for (y1 = 0; y1 < h; y1++) {
+		for (x1 = 0; x1 < w; x1++) {
+			idx = y1 * w + x1;
+			texArr[idx] = (char)((generator.perlin2DConfigurable(x1 * s, y1 * s, 121143, 1.0f, 8, 2.0f, 0.5f) * 0.5f + 0.5f) * 255.0f);
+		}
+	}
+
+	//Texture2D newText = { texArr, w, h, GL_RED, GL_RGBA };
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//newText.genMipmap();
+	////r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, newText, 50);
+	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
+	//r.md->std_texture2d = newText;
+
 	while (true)
 	{
 		evLoopStart = clock();

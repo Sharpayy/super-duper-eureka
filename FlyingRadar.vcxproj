@@ -67,8 +67,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <ExternalIncludePath>D:\VC_INCLUEE_LIB\stb-master;D:\VC_INCLUEE_LIB\include;D:\glew\include\GL;$(ExternalIncludePath)</ExternalIncludePath>
-    <LibraryPath>D:\VC_INCLUEE_LIB\lib\x64;D:\glew\lib\Release\x64;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>C:\Users\Piotr\Desktop\libs\stb;C:\Users\Piotr\Desktop\libs\glm\glm\glm;C:\Users\Piotr\Desktop\libs\glew-2.1.0\lib\Release\x64;C:\Users\Piotr\Desktop\libs\glew-2.1.0\include\GL;C:\Users\Piotr\Desktop\libs\SDL2-2.24.1\SDL2-2.24.1\include;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>C:\Users\Piotr\Desktop\libs\glew-2.1.0\lib\Release\x64;C:\Users\Piotr\Desktop\libs\SDL2-2.24.1\SDL2-2.24.1\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -94,7 +94,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>opengl32.lib;SDL2.lib;SDL2main.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -127,32 +127,18 @@
     <ClCompile Include="iReaders.cpp" />
     <ClCompile Include="iRendered.cpp" />
     <ClCompile Include="iWinSDL.cpp" />
-    <None Include=".gitignore" />
-    <None Include="ShaderFragmentIcon.glsl" />
-    <None Include="ShaderFragmentOneColor.glsl">
-      <FileType>Document</FileType>
-    </None>
+    <ClCompile Include="perlin.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aircraft.h" />
+    <ClInclude Include="AManager.h" />
     <ClInclude Include="iAllocators.h" />
     <ClInclude Include="iReaders.h" />
     <ClInclude Include="iRendered.h" />
     <ClInclude Include="iWinSDL.h" />
     <ClInclude Include="Models.h" />
-    <ClInclude Include="Objects.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="AtomicZeroFeedback.glsl" />
-    <None Include="FragmentPostProcessingCpy.glsl" />
-    <None Include="OpaqueFragmentShader.glsl" />
-    <None Include="ShaderDisableObjectScatter.glsl" />
-    <None Include="shaderFragment.glsl" />
-    <None Include="shaderVertex.glsl" />
-    <None Include="ShaderVertexIcon.glsl" />
-    <None Include="TransparentResolveCompute.glsl" />
-    <None Include="VertexPostProcessing.glsl" />
+    <ClInclude Include="perlin.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="point.png" />
