@@ -126,6 +126,7 @@
     <ClCompile Include="iReaders.cpp" />
     <ClCompile Include="iRendered.cpp" />
     <ClCompile Include="iWinSDL.cpp" />
+    <ClCompile Include="perlin.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -134,6 +135,7 @@
     <ClInclude Include="iRendered.h" />
     <ClInclude Include="iWinSDL.h" />
     <ClInclude Include="Models.h" />
+    <ClInclude Include="perlin.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="point.png" />

@@ -33,7 +33,7 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Aircraft.cpp">
+    <ClCompile Include="perlin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,50 +53,9 @@
     <ClInclude Include="Models.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objects.h">
+    <ClInclude Include="perlin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Aircraft.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="AtomicZeroFeedback.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="FragmentPostProcessingCpy.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="OpaqueFragmentShader.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ShaderDisableObjectScatter.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaderFragment.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaderVertex.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="TransparentResolveCompute.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="VertexPostProcessing.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ShaderFragmentOneColor.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include=".gitignore">
-      <Filter>git</Filter>
-    </None>
-    <None Include="ShaderVertexIcon.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ShaderFragmentIcon.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="point.png">
