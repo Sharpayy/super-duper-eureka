@@ -27,7 +27,7 @@ void main()
 {
 	
 	mat4 mModel = matModel[modelIdx[gl_InstanceID]];
-	float IconScale = min(uIconScale, 0.85);
+	float IconScale = max(uIconScale, 0.85);
 
 	mModel[0].x = mModel[0].x * uIconScale;
 	mModel[1].y = mModel[1].y * uIconScale;

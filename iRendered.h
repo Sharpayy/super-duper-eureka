@@ -143,6 +143,7 @@ public:
 	uint32_t id;
 	Texture2D();
 	Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int);
+	Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location);
 	void genMipmap();
 	void bind();
 

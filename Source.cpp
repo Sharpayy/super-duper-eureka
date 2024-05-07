@@ -158,20 +158,20 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 
 	if (e->type == SDL_KEYDOWN)
 	{
-		if (e->key.keysym.sym == SDLK_q)
+		if (e->key.keysym.sym == SDLK_e)
 		{
 			MapSettings->ScaleX /= scale_factor;
 			MapSettings->ScaleY /= scale_factor;
-			CurrIconScale /= 1.05;
+			CurrIconScale /= 1.08;
 		}
-		if (e->key.keysym.sym == SDLK_e)
+		if (e->key.keysym.sym == SDLK_q)
 		{
 			MapSettings->ScaleX *= scale_factor;
 			MapSettings->ScaleY *= scale_factor;
-			CurrIconScale *= 1.05;
+			CurrIconScale *= 1.08;
 		}
 
-		MapSettings->ScaleMatrix = scale(mat4(1.0f), vec3(MapSettings->ScaleX, MapSettings->ScaleY, 0.0f));
+		MapSettings->ScaleMatrix = glm::ortho(-MapSettings->ScaleX, MapSettings->ScaleX, -MapSettings->ScaleY, MapSettings->ScaleY, -1000.0f, 1000.0f);
 
 		if (e->key.keysym.sym == SDLK_w)
 			MapSettings->MoveY += move_factor;
@@ -309,27 +309,29 @@ int main(int argc, char** argv)
 
 	int x, y, c;
 	uint8_t* MapTextureData = (uint8_t*)LoadImageData("ukMap.png", 1, &c, &x, &y);
-	Texture2D MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA);
+	Texture2D MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	MapTexture.genMipmap();
+	//BindExternalTex2dLd0(MapTexture.id);
 
 	FreeImageData(MapTextureData);
 
-	MapTextureData = (uint8_t*)LoadImageData("heli.png", 0, &c, &x, &y);
-	Texture2D HeliTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA);
+	MapTextureData = (uint8_t*)LoadImageData("point.png", 0, &c, &x, &y);
+	Texture2D HeliTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	MapTexture.genMipmap();
+	//BindExternalTex2dLd0(HeliTexture.id);
 
 	FreeImageData(MapTextureData);
 
 	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
-	r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 50);
+	r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
@@ -337,7 +339,7 @@ int main(int argc, char** argv)
 	MapSetting.ScaleX = ScreenWidth  / 2.0f;
 	MapSetting.ScaleY = ScreenHeigth / 2.0f;
 	MapSetting.CameraMatrix = lookAt(vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f), vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
-	MapSetting.ScaleMatrix = scale(mat4(1.0f), vec3(MapSetting.ScaleX, MapSetting.ScaleY, 0.0f));
+	MapSetting.ScaleMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f);
 	MapSetting.NeedUpdate = 0;
 
 	r.setCameraMatrix(MapSetting.CameraMatrix);
@@ -350,8 +352,12 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, MapSetting.ScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(BaseIconScaleMatrix, vec3(0.0f, 0.0f, 0.05f)));
+	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
+	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
+	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
+	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
+	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
+
 	
 
 	glm::mat4 mt = glm::mat4(1.0f);
@@ -368,6 +374,9 @@ int main(int argc, char** argv)
 	RenderElapsedTime.Reset();
 	LoopElapsedTime.Reset();
 	uint32_t lp = 0;
+
+	uint32_t state = 0;
+
 
 	int64_t SumRenderTime = 0;
 	while (true)
@@ -386,9 +395,8 @@ int main(int argc, char** argv)
 		{
 			MapSetting.NeedUpdate = 0;
 			r.setCameraMatrix(MapSetting.CameraMatrix);
-			r.BindActiveModel(RENDER_MODEL_SQUARE1);
-			r.SetObjectMatrix(MapRenderObject, MapSetting.ScaleMatrix, true);
-			r.UpdateShaderDataCamera();
+			r.setProjectionMatrix(MapSetting.ScaleMatrix);
+			r.UpdateShaderData();
 			glUniform1f(ulIconScale, CurrIconScale);
 		}
 		win.swap();
@@ -401,7 +409,7 @@ int main(int argc, char** argv)
 		SumRenderTime += RenderElapsedTime.GetElapsedTime();
 		if (evCurrTime >= evLoopTimeTarget)
 		{
-			
+
 			char NewWinTitle[64];
 			SumRenderTime = SumRenderTime / 1000000;
 			

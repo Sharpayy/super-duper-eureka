@@ -395,7 +395,8 @@ void RenderGL::RenderSelectedModel(uint32_t id_model)
 	md->vao.bind();
 	md->matrixSSBO.bindBase(RENDERER_SHADER_MATRIX_SPACE_LOCATION);
 	md->idSpaceSSBO.bindBase(RENDERER_SHADER_IDX_SPACE_LOCATION);
-	BindExternalTex2dLd0(md->std_texture2d.id);
+	//BindExternalTex2dLd0(md->std_texture2d.id);
+	md->std_texture2d.bind();
 
 	glDrawElementsInstanced(md->renedrPrimitive, md->vertices, GL_UNSIGNED_INT, NULL, md->activeObjects);
 
@@ -494,6 +495,9 @@ void RenderGL::EnableObject(RENDER_OBJECT_ID o_id)
 
 	RenderModelDetails* obj = GetMdObject(cObjectIdx);
 
+	if (obj->objectId != o_id)
+		assert(obj->objectId != o_id);
+
 	if (obj->render == true)
 		return;
 
@@ -535,6 +539,9 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 	
 	if (obj->render == false)
 		return;
+
+	if (obj->objectId != o_id)
+		assert(obj->objectId != o_id);
 
 	md->activeObjects--;
 	obj->render = false;
@@ -692,6 +699,14 @@ Texture2D::Texture2D()
 Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int)
 {
 	glGenTextures(1, &id);
+	glBindTexture(GL_TEXTURE_2D, id);
+	glTexImage2D(GL_TEXTURE_2D, 0, data_int, x, y, 0, data_type, GL_UNSIGNED_BYTE, data);
+}
+
+Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location)
+{
+	glGenTextures(1, &id);
+	glActiveTexture(bind_location);
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexImage2D(GL_TEXTURE_2D, 0, data_int, x, y, 0, data_type, GL_UNSIGNED_BYTE, data);
 }
