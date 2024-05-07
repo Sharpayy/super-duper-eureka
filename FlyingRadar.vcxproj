@@ -135,6 +135,9 @@
     <ClInclude Include="iWinSDL.h" />
     <ClInclude Include="Models.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="point.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

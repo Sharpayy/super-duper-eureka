@@ -19,7 +19,7 @@ void main()
 
 	vec4 renderColor = texture(image0, uv_o);
 	
-	if (renderColor.w < 0.1)
+	if (renderColor.a < 0.5)
 		discard;
 
 	FragColor = renderColor;
