@@ -318,7 +318,7 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	MapTextureData = (uint8_t*)LoadImageData("heli.png", 0, &c, &x, &y);
+	MapTextureData = (uint8_t*)LoadImageData("grzegorzfloryda.png", 0, &c, &x, &y);
 	Texture2D HeliTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
