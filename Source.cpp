@@ -317,8 +317,8 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
-	r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
+	//r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
+	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
@@ -339,11 +339,11 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
+	//uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
 
 	
 
@@ -393,6 +393,8 @@ int main(int argc, char** argv)
 	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
 	//r.md->std_texture2d = newText;
 
+
+	AManager amanager{r, Square, simpleProgram};
 	while (true)
 	{
 		evLoopStart = clock();
@@ -401,8 +403,10 @@ int main(int argc, char** argv)
 		
 
 		RenderElapsedTime.TimeStart();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
-		r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
+		amanager.onUpdate();
+		
+		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
