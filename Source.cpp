@@ -297,7 +297,7 @@ int main(int argc, char** argv)
 	ppcpy_planeVB.enableAttrib(0);
 	ppcpy_planeVB.enableAttrib(1);
 
-	
+	glViewport(0, 0, ScreenWidth, ScreenHeigth);
 
 	RenderGL r = RenderGL(100);
 	r.setCameraMatrix(glm::mat4(1.0f));
@@ -374,9 +374,6 @@ int main(int argc, char** argv)
 	RenderElapsedTime.Reset();
 	LoopElapsedTime.Reset();
 	uint32_t lp = 0;
-
-	uint32_t state = 0;
-
 
 	int64_t SumRenderTime = 0;
 	while (true)
