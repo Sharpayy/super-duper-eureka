@@ -15,7 +15,7 @@ public:
 #define RENDER_MODEL_GLIDER 4
 #define RENDER_MODEL_PLANE 5
 
-class AirCraft : Renderable {
+class AirCraft : public Renderable {
 public:
 	AirCraft() = default;
 	AirCraft(glm::fvec2 position);
@@ -23,14 +23,39 @@ public:
 	void onUpdate();
 
 	float distanceToGround;
-	glm::fvec3 position;
+	glm::fvec2 position;
 	float speed;
 	float acceleration;
 	float angle;
+	glm::fvec2 destination;
 };
 
-class Ballon : AirCraft {};
-class Jet : AirCraft {};
-class Helicopter : AirCraft {};
-class Glider : AirCraft {};
-class Plane : AirCraft {};
+class Ballon : public AirCraft {
+public:
+	Ballon() = default;
+	Ballon(glm::fvec2 position, glm::fvec2 destination);
+};
+
+class Jet : public AirCraft {
+public:
+	Jet() = default;
+	Jet(glm::fvec2 position, glm::fvec2 destination);
+};
+
+class Helicopter : public AirCraft {
+public:
+	Helicopter() = default;
+	Helicopter(glm::fvec2 position, glm::fvec2 destination);
+};
+
+class Glider : public AirCraft {
+public:
+	Glider() = default;
+	Glider(glm::fvec2 position, glm::fvec2 destination);
+};
+
+class Plane : public AirCraft {
+public:
+	Plane() = default;
+	Plane(glm::fvec2 position, glm::fvec2 destination);
+};

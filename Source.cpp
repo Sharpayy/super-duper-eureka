@@ -317,8 +317,8 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
-	r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
+	//r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
+	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
@@ -339,11 +339,11 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
-	r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
+	//uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
 
 	
 
@@ -363,6 +363,35 @@ int main(int argc, char** argv)
 	uint32_t lp = 0;
 
 	int64_t SumRenderTime = 0;
+
+	PerlinNoiseGenerator generator;
+	float x1, y1;
+	int w, h, idx;
+	w = 100;
+	h = 100;
+	float s = 0.1f;
+
+	int size = w * h;
+	char* texArr = new char[size];
+	for (y1 = 0; y1 < h; y1++) {
+		for (x1 = 0; x1 < w; x1++) {
+			idx = y1 * w + x1;
+			texArr[idx] = (char)((generator.perlin2DConfigurable(x1 * s, y1 * s, 121143, 1.0f, 8, 2.0f, 0.5f) * 0.5f + 0.5f) * 255.0f);
+		}
+	}
+
+	//Texture2D newText = { texArr, w, h, GL_RED, GL_RGBA };
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//newText.genMipmap();
+	////r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, newText, 50);
+	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
+	//r.md->std_texture2d = newText;
+
+
+	AManager amanager{r, Square, simpleProgram};
 	while (true)
 	{
 		evLoopStart = clock();
@@ -371,8 +400,10 @@ int main(int argc, char** argv)
 		
 
 		RenderElapsedTime.TimeStart();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
-		r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
+		amanager.onUpdate();
+		
+		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
