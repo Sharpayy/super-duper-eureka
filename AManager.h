@@ -1,22 +1,4 @@
-#pragma once
-//Renderer
-#include <cstdio>
-#include "iWinSDL.h"
-#include "iRendered.h"
-#include "iReaders.h"
-#include <ctime>
-#include "Models.h"
-#include <gtc/matrix_transform.hpp>
-#include <functional>
-#include "Objects.h"
-#include <stb_image.h>
-
-//Additional
-#include "perlin.h"
-
-#include "Aircraft.h"
-#include <utility>
-#include <random>
+#include "Bezier.h"
 
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)

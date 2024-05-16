@@ -1,4 +1,6 @@
 #include "AManager.h"
+#include "Models.h"
+#include "Objects.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
@@ -30,6 +32,8 @@ float move_factor = 20.0f;
 
 uint32_t ScreenWidth = 800;
 uint32_t ScreenHeigth = 800;
+
+#define RENDER_MODEL_SQUARE1 7
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
@@ -192,6 +196,16 @@ int main(int argc, char** argv)
 	const char* srcShaderIconVertex = GetFileData((char*)"ShaderVertexIcon.glsl")->c_str();
 	const char* srcShaderIconFragment = GetFileData((char*)"ShaderFragmentIcon.glsl")->c_str();
 
+	const char* srcShaderBezierVtx = GetFileData((char*)"vtx_shader_bezier.glsl")->c_str();
+	const char* srcShaderBezierTcs = GetFileData((char*)"tcs_shader_bezier.glsl")->c_str();
+	const char* srcShaderBezierTes = GetFileData((char*)"tes_shader_bezier.glsl")->c_str();
+	const char* srcShaderBezierFrg = GetFileData((char*)"frg_shader_bezier.glsl")->c_str();
+
+	Shader<GL_VERTEX_SHADER>				 shdrBezVtx = Shader<GL_VERTEX_SHADER>(srcShaderBezierVtx);
+	Shader<GL_TESS_CONTROL_SHADER>			 shdrBezTcs = Shader<GL_TESS_CONTROL_SHADER>(srcShaderBezierTcs);
+	Shader<GL_TESS_EVALUATION_SHADER>		 shdrBezTes = Shader<GL_TESS_EVALUATION_SHADER>(srcShaderBezierTes);
+	Shader<GL_FRAGMENT_SHADER>				 shdrBezFrg = Shader<GL_FRAGMENT_SHADER>(srcShaderBezierFrg);
+
 	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
 	Shader<GL_COMPUTE_SHADER>  shdrCompute = Shader<GL_COMPUTE_SHADER>(srcShaderCompute);
@@ -202,6 +216,13 @@ int main(int argc, char** argv)
 	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgIcon = Shader<GL_FRAGMENT_SHADER>(srcShaderIconFragment);
 	Shader<GL_VERTEX_SHADER>   shdrVertIcon = Shader<GL_VERTEX_SHADER>(srcShaderIconVertex);
+
+	Program BezierProg = Program();
+	BezierProg.programAddShader(shdrBezVtx.id);
+	BezierProg.programAddShader(shdrBezTes.id);
+	BezierProg.programAddShader(shdrBezTcs.id);
+	BezierProg.programAddShader(shdrBezFrg.id);
+	BezierProg.programCompile();
 
 	Program iconProgram = Program();
 	iconProgram.programAddShader(shdrFrgIcon.id);
@@ -317,7 +338,7 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	//r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
 	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
@@ -339,13 +360,21 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	//uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
+	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
 	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
 	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
 	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
 	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
 
-	
+	BezierProg.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
+	printf(debugInfo);
+
+	BezierCurveParameters p[4];
+	p[0] = BezierCurveParameters{vec2(0.0f, 0.0f), vec2(120.0f, 150.0f), vec2(0.0f, 200.0f)};
+	p[1] = BezierCurveParameters{vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(-100.0f, -200.0f)};
+
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 50.0f);
+	Bezier.UpdateData(p, 2, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -354,6 +383,8 @@ int main(int argc, char** argv)
 	clock_t evLoopTimeTarget = 1000;
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LINE_SMOOTH);
+	glLineWidth(5.0f);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
@@ -400,10 +431,9 @@ int main(int argc, char** argv)
 		
 
 		RenderElapsedTime.TimeStart();
-		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
+		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		
-		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		Bezier.Render(2);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
@@ -412,7 +442,6 @@ int main(int argc, char** argv)
 			r.setCameraMatrix(MapSetting.CameraMatrix);
 			r.setProjectionMatrix(MapSetting.ScaleMatrix);
 			r.UpdateShaderData();
-			glUniform1f(ulIconScale, CurrIconScale);
 		}
 		win.swap();
 
