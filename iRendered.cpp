@@ -161,15 +161,15 @@ void Program::programAddShader(uint32_t shdr)
 
 int Program::programGetDebugInfo(char* bf, size_t bf_size)
 {
-		int v;
-		glGetProgramiv(id, GL_LINK_STATUS, &v);
+	int v;
+	glGetProgramiv(id, GL_LINK_STATUS, &v);
 
-		if (v == 1)
-			return v;
-
-		int wr;
-		glGetProgramInfoLog(id, bf_size, &wr, bf);
+	if (v == 1)
 		return v;
+
+	int wr;
+	glGetProgramInfoLog(id, bf_size, &wr, bf);
+	return v;
 }
 
 void Program::use()
@@ -216,7 +216,7 @@ RenderGL::RenderGL(uint32_t model_amount)
 
 	POOLPAGE_MEDIUM_NEW_ALLOCATE = 8;
 
-	MVP = InShaderMVP_DATA{glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
+	MVP = InShaderMVP_DATA{ glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
 
 	uMVP = UniformBufferObject();
 	uMVP.data(64 * 3, &MVP, GL_DYNAMIC_COPY);
@@ -331,14 +331,7 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat)
 	_object_id = spaceIdIdx.a;
 
 	if (md->activeObjects != md->objAmount)
-	{
-		uint32_t lastObjIdx = MapToObjectIdx(GetMdObject(GetIdFirstMdInactiveObject() - 1)->objectId);
-		uint32_t cObjectIdx = MapToObjectIdx(_object_id);
-
-		SwapObjectOrder(cObjectIdx, lastObjIdx);
-		SwapObjectIdxOrder(rmd->objectId, _object_id);
-		SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
-	}
+		EnableObjectInternal(_object_id);
 
 	return _object_id;
 }
@@ -370,14 +363,7 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat, uint64_
 	_object_id = spaceIdIdx.a;
 
 	if (md->activeObjects != md->objAmount)
-	{
-		uint32_t lastObjIdx = MapToObjectIdx(GetMdObject(GetIdFirstMdInactiveObject() - 1)->objectId);
-		uint32_t cObjectIdx = MapToObjectIdx(_object_id);
-
-		SwapObjectOrder(cObjectIdx, lastObjIdx);
-		SwapObjectIdxOrder(rmd->objectId, _object_id);
-		SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
-	}
+		EnableObjectInternal(_object_id);
 
 	((RENDER_LONG_ID*)longId)->ModelId = mdi;
 	((RENDER_LONG_ID*)longId)->ObjectId = _object_id;
@@ -395,7 +381,6 @@ void RenderGL::RenderSelectedModel(uint32_t id_model)
 	md->vao.bind();
 	md->matrixSSBO.bindBase(RENDERER_SHADER_MATRIX_SPACE_LOCATION);
 	md->idSpaceSSBO.bindBase(RENDERER_SHADER_IDX_SPACE_LOCATION);
-	//BindExternalTex2dLd0(md->std_texture2d.id);
 	md->std_texture2d.bind();
 
 	glDrawElementsInstanced(md->renedrPrimitive, md->vertices, GL_UNSIGNED_INT, NULL, md->activeObjects);
@@ -415,28 +400,24 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 	if (mdi != m_id)
 		BindActiveModel(m_id);
 
+	uint32_t lastObjIdx = md->objAmount - 1;
+	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
-	uint32_t lastObjIdx = MapToObjectIdx(md->objects.at(md->objAmount - 1)->objectId); // 9
-	uint32_t cObjectIdx = MapToObjectIdx(o_id); // 9
-
-	RenderModelDetails* obj = GetMdObject(cObjectIdx);
+	RenderModelDetails* obj = GetMdObject(sObjectIdx);
 
 	if (obj->render == true)
 		return;
 
-	//uint32_t obj_index = MapToObjectIdx(o_id);
-	//uint32_t swapObjIndex = md->objects.c_size - 1;
-	uint32_t MtxId = obj->matrixId;
-
-	SwapObjectOrder(cObjectIdx, lastObjIdx); //9, 9
-	SwapObjectIdxOrder(obj->objectId, o_id); //1, 1
-	//SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);// 9, 9
-
-	NotifyFreeIdx(o_id, MtxId); // cObjectIdx
-	// delete object from pool
+	NotifyFreeIdx(o_id, obj->matrixId);
 	md->objects.del_last();
 	md->objAmount--;
-	//md->activeObjects--;
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
+	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
 
 }
 
@@ -474,39 +455,38 @@ void RenderGL::EnableObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 void RenderGL::EnableObject(RENDER_OBJECT_ID o_id)
 {
-	/*
-	uint32_t swapObjIdx = GetIdFirstMdInactiveObject();
-	uint32_t oIdx = MapToObjectIdx(o_id);
-	//uint32_t oIdx = o_id;
-
-	if (GetMdObject(oIdx)->render == true)
-		return;
-
-	GetMdObject(oIdx)->render = true;
-	SwapObjectOrder(oIdx, swapObjIdx);
-	SwapObjectIdxOrder(oIdx, swapObjIdx);
-	SwapInBufferIdxOrder(oIdx, swapObjIdx);
-	md->activeObjects++;
-	*/
-
-	uint32_t lastObjIdx = MapToObjectIdx(md->objects.at(GetActiveObjectsInMd() + 1)->objectId);
+	uint32_t lastObjIdx = (GetActiveObjectsInMd() + 1);
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
-
-	RenderModelDetails* obj = GetMdObject(cObjectIdx);
-
-	if (obj->objectId != o_id)
-		assert(obj->objectId != o_id);
+	RenderModelDetails* obj = GetMdObject(sObjectIdx);
 
 	if (obj->render == true)
 		return;
 
 	obj->render = true;
-
-	//SwapObjectOrder(cObjectIdx, lastObjIdx);
-	//SwapObjectIdxOrder(obj->objectId, o_id);
-	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
 	md->activeObjects++;
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
+	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
+}
+
+void RenderGL::EnableObjectInternal(RENDER_OBJECT_ID o_id)
+{
+	uint32_t lastObjIdx = (GetActiveObjectsInMd());
+	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
+
+	RenderModelDetails* obj = GetMdObject(sObjectIdx);
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
+	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
 }
 
 void RenderGL::DisableObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
@@ -518,36 +498,83 @@ void RenderGL::DisableObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 {
-	/*
-	uint32_t swapObjIdx = GetActiveObjectsInMd();
-	uint32_t oIdx = MapToObjectIdx(o_id);
-
-	if (GetMdObject(oIdx)->render == false)
-		return;
-
-	GetMdObject(oIdx)->render = false;
-	SwapObjectOrder(oIdx, swapObjIdx);
-	SwapObjectIdxOrder(oIdx, swapObjIdx);
-	SwapInBufferIdxOrder(oIdx, swapObjIdx);
-	md->activeObjects--;
-	*/
-
-	uint32_t lastObjIdx = MapToObjectIdx(md->objects.at(GetIdFirstMdInactiveObject() - 1)->objectId);
+	uint32_t lastObjIdx = (GetIdFirstMdInactiveObject() - 1);
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
 
-	RenderModelDetails* obj = GetMdObject(cObjectIdx);
-	
+	RenderModelDetails* obj = GetMdObject(MapObjectToSpaceIdx(cObjectIdx));
+
 	if (obj->render == false)
 		return;
 
-	if (obj->objectId != o_id)
-		assert(obj->objectId != o_id);
+	md->activeObjects--;
+	obj->render = false;
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(GetIdFirstMdInactiveObject(), o_id);
+	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
+}
+
+void RenderGL::EnableObjectNoSync(RENDER_OBJECT_ID o_id)
+{
+	uint32_t lastObjIdx = (GetActiveObjectsInMd() + 1);
+	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
+
+	RenderModelDetails* obj = GetMdObject(sObjectIdx);
+
+	if (obj->render == true)
+		return;
+
+	obj->render = true;
+	md->activeObjects++;
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
+	SwapInBufferIdxOrderNoSync(cObjectIdx, lastObjIdx);
+}
+
+void RenderGL::DisableObjectNoSync(RENDER_OBJECT_ID o_id)
+{
+	uint32_t lastObjIdx = (GetIdFirstMdInactiveObject() - 1);
+	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+
+	RenderModelDetails* obj = GetMdObject(MapObjectToSpaceIdx(cObjectIdx));
+
+	if (obj->render == false)
+		return;
 
 	md->activeObjects--;
 	obj->render = false;
-	//SwapObjectOrder(cObjectIdx, lastObjIdx);// !!!!!
-	//SwapObjectIdxOrder(obj->objectId, o_id);
-	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx); //*
+
+	if (lastObjIdx == cObjectIdx)
+		return;
+
+	SwapObjectIdxOrder(GetIdFirstMdInactiveObject(), o_id);
+	SwapInBufferIdxOrderNoSync(cObjectIdx, lastObjIdx);
+}
+
+uint32_t RenderGL::MapObjectToSpaceIdx(uint32_t obj)
+{
+	return md->dlIndexSpace.at(obj);
+}
+
+bool RenderGL::IsObjectActiveAlt(RENDER_OBJECT_ID o_id)
+{
+	uint32_t ObjIdx = MapToObjectIdx(o_id);
+	return (ObjIdx < md->activeObjects);
+}
+
+void RenderGL::UpdateShaderIdSpace(uint32_t m_id)
+{
+	if (mdi != m_id)
+		BindActiveModel(m_id);
+
+	md->idSpaceSSBO.bind();
+	md->idSpaceSSBO.subdata(0, md->objAmount * 4, md->dlIndexSpace.base_ptr);
 }
 
 void RenderGL::DisableObjectL(uint64_t longId)
@@ -632,12 +659,12 @@ void RenderGL::SwapObjectOrder(uint32_t idx0, uint32_t idx1)
 	Swap<RenderModelDetails>(GetMdObject(idx0), GetMdObject(idx1));
 }
 
-void RenderGL::SwapObjectIdxOrder(uint32_t idx0, uint32_t idx1)
+void inline RenderGL::SwapObjectIdxOrder(uint32_t idx0, uint32_t idx1)
 {
 	Swap<uint32_t>(md->objectsId.atp(idx0), md->objectsId.atp(idx1));
 }
 
-void RenderGL::SwapInBufferIdxOrder(uint32_t idx0, uint32_t idx1)
+void inline RenderGL::SwapInBufferIdxOrder(uint32_t idx0, uint32_t idx1)
 {
 	Swap<uint32_t>(md->dlIndexSpace.atp(idx0), md->dlIndexSpace.atp(idx1));
 
@@ -645,9 +672,14 @@ void RenderGL::SwapInBufferIdxOrder(uint32_t idx0, uint32_t idx1)
 	md->idSpaceSSBO.bind();
 	//glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, idx0 * 4, 4, &value0);
 	//glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, idx1 * 4, 4, &value1);
-	
+
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, idx0 * 4, 4, md->dlIndexSpace.atp(idx0));
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, idx1 * 4, 4, md->dlIndexSpace.atp(idx1));
+}
+
+void RenderGL::SwapInBufferIdxOrderNoSync(uint32_t idx0, uint32_t idx1)
+{
+	Swap<uint32_t>(md->dlIndexSpace.atp(idx0), md->dlIndexSpace.atp(idx1));
 }
 
 RenderModelDetails* RenderGL::GetMdObject(uint32_t idx)

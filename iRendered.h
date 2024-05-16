@@ -33,7 +33,7 @@ public:
 
 		if (v == 1)
 			return v;
-		
+
 		int wr;
 		glGetShaderInfoLog(id, bf_size, &wr, bf);
 		return v;
@@ -317,6 +317,12 @@ void Swap(T* a, T* b)
 	*b = t;
 }
 
+template<typename T> void swap(T* t1, T* t2) {
+	T* temp = std::move(t1);
+	t1 = std::move(t2);
+	t2 = std::move(temp);
+}
+
 typedef uint32_t RENDER_OBJECT_ID;
 typedef uint32_t RENDER_MODEL_ID;
 
@@ -367,9 +373,20 @@ public:
 	void DisableObject(uint32_t m_id, RENDER_OBJECT_ID o_id);
 	void DisableObject(RENDER_OBJECT_ID o_id);
 
+	void EnableObjectNoSync(RENDER_OBJECT_ID o_id);
+	void DisableObjectNoSync(RENDER_OBJECT_ID o_id);
+
+	void EnableObjectInternal(RENDER_OBJECT_ID o_id);
+
+	uint32_t MapObjectToSpaceIdx(uint32_t obj);
+	uint32_t GetObjectIdSpaceIdx(uint32_t obj);
+	bool IsObjectActiveAlt(RENDER_OBJECT_ID o_id);
+
+	void UpdateShaderIdSpace(uint32_t m_id);
+
 	void DisableObjectL(uint64_t longId);
 	void EnableObjectL(uint64_t longId);
-	
+
 
 	DoubleInt32 GetFreeIdSpaceIndex(uint32_t m_id);
 
@@ -386,6 +403,7 @@ public:
 	void SwapObjectOrder(uint32_t idx0, uint32_t idx1);
 	void SwapObjectIdxOrder(uint32_t idx0, uint32_t idx1);
 	void SwapInBufferIdxOrder(uint32_t idx0, uint32_t idx1);
+	void SwapInBufferIdxOrderNoSync(uint32_t idx0, uint32_t idx1);
 
 	uint32_t MapToObjectIdx(uint32_t id);
 	uint32_t MapToIndexSpace(uint32_t idx);
