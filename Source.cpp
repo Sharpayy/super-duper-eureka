@@ -402,12 +402,12 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 
-		RenderElapsedTime.TimeStart();
+		//RenderElapsedTime.TimeStart();
 		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
 		amanager.onUpdate();
 		
 		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
-		RenderElapsedTime.TimeEnd();
+		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
 		{

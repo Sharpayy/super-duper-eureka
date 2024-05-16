@@ -1,13 +1,6 @@
 #pragma once
 #include <glm.hpp>
-
-typedef unsigned long long uint64_t;
-
-class Renderable
-{
-public:
-	uint64_t LongId;
-};
+#include "Renderable.h"
 
 #define RENDER_MODEL_BALLON 1
 #define RENDER_MODEL_JET 2
