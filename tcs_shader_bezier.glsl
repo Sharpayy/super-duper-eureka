@@ -1,5 +1,4 @@
-#version 430 core
-
+#version 430
 layout (vertices = 3) out;
 
 uniform float BezierQuality;

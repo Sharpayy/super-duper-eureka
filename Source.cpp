@@ -338,7 +338,7 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 200010);
 	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
@@ -352,8 +352,6 @@ int main(int argc, char** argv)
 
 	r.setCameraMatrix(MapSetting.CameraMatrix);
 	r.UpdateShaderDataCamera();
-
-
 
 	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
 	
@@ -372,9 +370,11 @@ int main(int argc, char** argv)
 	BezierCurveParameters p[4];
 	p[0] = BezierCurveParameters{vec2(0.0f, 0.0f), vec2(120.0f, 150.0f), vec2(0.0f, 200.0f)};
 	p[1] = BezierCurveParameters{vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(-100.0f, -200.0f)};
+	p[2] = BezierCurveParameters{ vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(100.0f, 200.0f) };
+	p[3] = BezierCurveParameters{ vec2(-300.0f, -100.0f), vec2(250.0f, 70.0f), vec2(-150.0f, -100.0f) };
 
 	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 50.0f);
-	Bezier.UpdateData(p, 2, 0);
+	Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -383,8 +383,7 @@ int main(int argc, char** argv)
 	clock_t evLoopTimeTarget = 1000;
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LINE_SMOOTH);
-	glLineWidth(5.0f);
+	glLineWidth(3.0f);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
@@ -422,7 +421,7 @@ int main(int argc, char** argv)
 	//r.md->std_texture2d = newText;
 
 
-	AManager amanager{r, Square, simpleProgram};
+	AManager amanager{ r, Square, simpleProgram };
 	while (true)
 	{
 		evLoopStart = clock();
@@ -433,7 +432,7 @@ int main(int argc, char** argv)
 		RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(2);
+		Bezier.Render(4);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
@@ -443,9 +442,11 @@ int main(int argc, char** argv)
 			r.setProjectionMatrix(MapSetting.ScaleMatrix);
 			r.UpdateShaderData();
 		}
-		win.swap();
 
 		win.handleEvents();
+
+		win.swap();
+
 
 		lp++;
 		LoopElapsedTime.End();

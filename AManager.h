@@ -107,7 +107,6 @@ private:
 			return (AirCraft*)glider;
 
 		default:
-			AM_ASSERT("GenerateRandomAirCraft idx out of bound");
 			break;
 		}
 	}

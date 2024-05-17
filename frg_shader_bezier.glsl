@@ -1,4 +1,4 @@
-#version 410 core
+#version 430
 
 out vec4 OutColor;
 uniform vec4 BezierColor;

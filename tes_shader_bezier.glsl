@@ -1,4 +1,4 @@
-#version 430 core
+#version 430 
 layout (isolines, fractional_odd_spacing, ccw) in;
 
 layout(std140, binding = 1) uniform MVP_DATA
@@ -19,6 +19,4 @@ void main()
 	vec2 Point = (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2;
 
 	gl_Position = matProjCamera * vec4(Point, 0.5, 1.0);
-
-
 }
