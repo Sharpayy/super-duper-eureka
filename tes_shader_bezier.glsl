@@ -1,5 +1,5 @@
-#version 430 core
-layout (isolines, fractional_odd_spacing, ccw) in;
+#version 430 
+layout (isolines, equal_spacing, ccw) in;
 
 layout(std140, binding = 1) uniform MVP_DATA
 {
@@ -15,10 +15,9 @@ void main()
 	vec2 p0 = gl_in[0].gl_Position.xy;
 	vec2 p1 = gl_in[1].gl_Position.xy;
 	vec2 p2 = gl_in[2].gl_Position.xy;
+	vec2 p3 = gl_in[3].gl_Position.xy;
 
-	vec2 Point = (1-t)*(1-t)*p0 + 2*(1-t)*t*p1 + t*t*p2;
+	vec2 Point = (1-t)*(1-t)*(1-t)*p0 + 3*(1-t)*(1-t)*t*p1 + 3*(1-t)*t*t*p2 + t*t*t*p3;
 
 	gl_Position = matProjCamera * vec4(Point, 0.5, 1.0);
-
-
 }

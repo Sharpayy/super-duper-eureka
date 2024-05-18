@@ -1,5 +1,4 @@
 #include "Bezier.h"
-#include "octree.h"
 
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
@@ -39,18 +38,10 @@ public:
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 		addModel(MapTexture, RENDER_MODEL_PLANE);
 
-		qt._alloc(8);
-		AirCraft* ac;
-		for (int i = 0; i < 500; i++) {
-			ac = generateRandomAirCraft(i % 5, 10000, 10000);
-			airCraftVec.push_back(ac);
-			qt._push(ac, { ac->position.x, ac->position.y });
+		for (int i = 0; i < 50; i++) {
+			airCraftVec.push_back(generateRandomAirCraft(i % 5, 1000, 1000));
 		}
-		ac = generateRandomAirCraft(0, 10000, 10000);
-		airCraftVec.push_back(ac);
-		qt._push(ac, { ac->position.x, ac->position.y });
-		auto g = qt._collide(ac, 10, 10);
-		qt.~QT();
+
 		//86 400
 		timeScale = 1.0f / 3600.0f;
 	}
@@ -100,10 +91,10 @@ private:
 			return (AirCraft*)ballon;
 		case 1:
 			jet = new Jet{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }) * BaseIconScaleMatrix, &jet->LongId);
+			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{jet->position.x, jet->position.y, 0.05f}) * BaseIconScaleMatrix, &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
-			helicopter = new Helicopter{ s_e.first, s_e.second };
+			 helicopter = new Helicopter{ s_e.first, s_e.second };
 			r.newObject(RENDER_MODEL_HELICOPTER, glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y, 0.05f }) * BaseIconScaleMatrix, &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
@@ -116,7 +107,6 @@ private:
 			return (AirCraft*)glider;
 
 		default:
-			//AM_ASSERT("GenerateRandomAirCraft idx out of bound");
 			break;
 		}
 	}
@@ -127,7 +117,7 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		texture.genMipmap();
-		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 200000);
+		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 50);
 	}
 
 	void rotateAirCraft(AirCraft* airCraft, glm::fvec3 destination) {
@@ -138,7 +128,6 @@ private:
 	}
 private:
 	std::vector<AirCraft*> airCraftVec;
-	QT<AirCraft> qt{10000, 10000};
 
 	RenderGL r;
 	VertexBuffer vertexBuff;

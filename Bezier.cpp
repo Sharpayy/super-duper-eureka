@@ -33,7 +33,7 @@ void BezierRenderer::Render(uint32_t amount = 0)
 	bezierProgram.use();
 	bezierVertex.bind();
 
-	glDrawArrays(GL_PATCHES, 0, amount * 3);
+	glDrawArrays(GL_PATCHES, 0, amount * BEZIER_PATCH_AMOUNT);
 }
 
 void BezierRenderer::UpdateData(BezierCurveParameters* data, uint32_t amount, uint32_t amountOffset)
