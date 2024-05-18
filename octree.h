@@ -69,33 +69,48 @@ public:
 		root = new Node{};
 		_alloc(1);
 	}
+	~QT() {
+		std::vector<Node*> vdata;
+		_getNodesRec(root, vdata);
+		for (Node* n : vdata) {
+			delete n->p;
+			delete n;
+		}
+	}
 
 	void _push(T* data, PointQT p) {
 		Node* n = root;
-		RectQT rect = { PointQT{0, 0}, w, h };
+		RectQT rect = { PointQT{0, 0}, w / 2.0f, h / 2.0f };
 		uint8_t dir;
 		while (n->data || n == root) {
-			if (p.x >= rect.point.x && p.x <= rect.point.x + rect.width
-				&& p.y >= rect.point.y && p.y <= rect.point.y + rect.height) {
-				dir = TOP_LEFT;
-			}
-			else if (p.x >= rect.point.x + rect.width && p.x <= rect.point.x + 2 * rect.width
-				&& p.y >= rect.point.y && p.y <= rect.point.y + rect.height) {
-				dir = TOP_RIGHT;
-			}
-			else if (p.x >= rect.point.x && p.x <= rect.point.x + rect.width
-				&& p.y >= rect.point.y + rect.height && p.y <= rect.point.y + 2 * rect.height) {
-				dir = BOTTOM_LEFT;
-			}
-			else if (p.x >= rect.point.x + rect.width && p.x <= rect.point.x + 2 * rect.width
-				&& p.y >= rect.point.y + rect.height && p.y <= rect.point.y + 2 * rect.height) {
-				dir = BOTTOM_RIGHT;
-			}
-			rect = _calcDim(rect, dir, &n);
+			dir = getDirection(p, rect);
+			_calcDim(rect, dir, n);
 		}
 		n->_init(data, new PointQT{ p.x, p.y });
+	}
 
+	uint8_t getDirection(const PointQT& p, const RectQT& rect) {
+		float left = rect.point.x;
+		float right = rect.point.x + rect.width;
+		float top = rect.point.y;
+		float bottom = rect.point.y + rect.height;
 
+		if (p.x >= left && p.x <= right) {
+			if (p.y >= top && p.y <= bottom) {
+				return TOP_LEFT;
+			}
+			else if (p.y > bottom && p.y <= bottom + rect.height) {
+				return BOTTOM_LEFT;
+			}
+		}
+		else if (p.x > right && p.x <= right + rect.width) {
+			if (p.y >= top && p.y <= bottom) {
+				return TOP_RIGHT;
+			}
+			else if (p.y > bottom && p.y <= bottom + rect.height) {
+				return BOTTOM_RIGHT;
+			}
+		}
 	}
 
 	bool _collide(T* data, float w, float h) {
@@ -103,19 +118,12 @@ public:
 		Node* base = nullptr;
 		_finNodeRec(root, data, n, base);
 		if (n) {
-			RectQT ob1, ob2;
+			RectQT ob1;
 			PointQT* p = n->p;
 			ob1 = RectQT{ PointQT{p->x - w / 2.0f, p->y - h / 2.0f }, w, h };
-			std::vector<Node*> vdata;
-			_getNodesRec(base, vdata);
-			for (Node* n : vdata) {
-				p = n->p;
-				ob2 = RectQT{ PointQT{p->x - w / 2.0f, p->y - h / 2.0f }, w, h};
-				if (ob1.intersect(ob2) && !(ob1 == ob2)) return true;
-			}
+			return _collideRec(base, ob1, n);
 		}
 		return false;
-
 	}
 
 	void _alloc(int depth) {
@@ -154,31 +162,30 @@ private:
 		Node* nodes[4];
 	};
 
-	RectQT _calcDim(RectQT rect, uint8_t dir, Node** n) {
-		float w, h;
-		w = rect.width / 2.0f;
-		h = rect.height / 2.0f;
+	void _calcDim(RectQT& rect, uint8_t& dir, Node*& n) {
 		switch (dir)
 		{
 		case TOP_LEFT:
-			(*n) = (*n)->nodes[0];
-			return { PointQT{rect.point.x , rect.point.y }, w, h };
+			n = n->nodes[0];
 			break;
 		case TOP_RIGHT:
-			(*n) = (*n)->nodes[1];
-			return { PointQT{rect.point.x + w, rect.point.y }, w, h };
+			n = n->nodes[1];
+			rect.point.x += rect.width;
 			break;
 		case BOTTOM_LEFT:
-			(*n) = (*n)->nodes[2];
-			return { PointQT{rect.point.x, rect.point.y + h }, w, h };
+			n = n->nodes[2];
+			rect.point.y += rect.height;
 			break;
 		case BOTTOM_RIGHT:
-			(*n) = (*n)->nodes[3];
-			return { PointQT{rect.point.x + w, rect.point.y + h }, w, h };
+			n = n->nodes[3];
+			rect.point.x += rect.width;
+			rect.point.y += rect.height;
 			break;
 		default:
 			break;
 		}
+		rect.width /= 2.0f;
+		rect.height /= 2.0f;
 
 
 	}
@@ -210,7 +217,16 @@ private:
 	}
 
 	void _getNodesRec(Node* n, std::vector<Node*>& data) {
-		if (n->data) {
+		if (n->data || n == root) {
+			data.push_back(n);
+			for (int i = 0; i < 4; i++) {
+				_getNodesRec(n->nodes[i], data);
+			}
+		}
+	}
+
+	void _getNodesIntersecRec(Node* n, std::vector<Node*>& data, RectQT& rect) {
+		if (n->data && rect.intersect()) {
 			data.push_back(n);
 			for (int i = 0; i < 4; i++) {
 				_getNodesRec(n->nodes[i], data);
@@ -226,6 +242,23 @@ private:
 				_removeDataRec(n->nodes[i]);
 			}
 		}
+	}
+
+	bool _collideRec(Node* n, const RectQT& ob1, Node* ignore) {
+		if (n) {
+			if (n != ignore && n->p) {
+				RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
+				if (ob1.intersect(ob2)) {
+					return true;
+				}
+			}
+			for (int i = 0; i < 4; i++) {
+				if (_collideRec(n->nodes[i], ob1, ignore)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	void _allocRec(Node* n, int depth, int depthMax) {

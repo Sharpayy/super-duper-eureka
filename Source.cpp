@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 	Shader<GL_TESS_EVALUATION_SHADER>		 shdrBezTes = Shader<GL_TESS_EVALUATION_SHADER>(srcShaderBezierTes);
 	Shader<GL_FRAGMENT_SHADER>				 shdrBezFrg = Shader<GL_FRAGMENT_SHADER>(srcShaderBezierFrg);
 
-	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
+	Shader<GL_VERTEX_SHADER>   shdrVertex = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
 	Shader<GL_COMPUTE_SHADER>  shdrCompute = Shader<GL_COMPUTE_SHADER>(srcShaderCompute);
 	Shader<GL_VERTEX_SHADER>   shdrPstPrVertex = Shader<GL_VERTEX_SHADER>(srcPstPrVertex);
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
 	MapSetting.MoveY = 0.0f;
-	MapSetting.ScaleX = ScreenWidth  / 2.0f;
+	MapSetting.ScaleX = ScreenWidth / 2.0f;
 	MapSetting.ScaleY = ScreenHeigth / 2.0f;
 	MapSetting.CameraMatrix = lookAt(vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f), vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 	MapSetting.ScaleMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f);
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 
 
 	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
-	
+
 #define OM(A) r.GetObjectMatrix(A)
 
 
@@ -370,8 +370,8 @@ int main(int argc, char** argv)
 	printf(debugInfo);
 
 	BezierCurveParameters p[4];
-	p[0] = BezierCurveParameters{vec2(0.0f, 0.0f), vec2(120.0f, 150.0f), vec2(0.0f, 200.0f)};
-	p[1] = BezierCurveParameters{vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(-100.0f, -200.0f)};
+	p[0] = BezierCurveParameters{ vec2(0.0f, 0.0f), vec2(120.0f, 150.0f), vec2(0.0f, 200.0f) };
+	p[1] = BezierCurveParameters{ vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(-100.0f, -200.0f) };
 
 	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 50.0f);
 	Bezier.UpdateData(p, 2, 0);
@@ -422,19 +422,18 @@ int main(int argc, char** argv)
 	//r.md->std_texture2d = newText;
 
 
-	AManager amanager{r, Square, simpleProgram};
+	AManager amanager{ r, Square, simpleProgram };
 	while (true)
 	{
 		evLoopStart = clock();
 		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
 
 		RenderElapsedTime.TimeStart();
-		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
+		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		
-		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		Bezier.Render(2);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
@@ -457,7 +456,7 @@ int main(int argc, char** argv)
 
 			char NewWinTitle[64];
 			SumRenderTime = SumRenderTime / 1000000;
-			
+
 			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
 
 			SDL_SetWindowTitle(win.win, NewWinTitle);

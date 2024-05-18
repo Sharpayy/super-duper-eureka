@@ -1,29 +1,9 @@
-#pragma once
-//Renderer
-#include <cstdio>
-#include "iWinSDL.h"
-#include "iRendered.h"
-#include "iReaders.h"
-#include <ctime>
-#include "Models.h"
-#include <gtc/matrix_transform.hpp>
-#include <functional>
-#include "Objects.h"
-#include <stb_image.h>
-
-//Additional
-#include "perlin.h"
-
-#include "Aircraft.h"
-#include <utility>
-#include <random>
+#include "Bezier.h"
+#include "octree.h"
 
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
 #endif
-
-#define MAP_WIDTH 20000
-#define MAP_HEIGHT 20000
 
 extern glm::mat4 BaseIconScaleMatrix;
 
@@ -59,18 +39,18 @@ public:
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 		addModel(MapTexture, RENDER_MODEL_PLANE);
 
+		qt._alloc(8);
 		AirCraft* ac;
-		for (int i = 1; i < 5000; i++) {
-			ac = generateRandomAirCraft(i % 5, MAP_WIDTH, MAP_HEIGHT, i);
+		for (int i = 0; i < 500; i++) {
+			ac = generateRandomAirCraft(i % 5, 10000, 10000);
 			airCraftVec.push_back(ac);
-			//qt._push(ac, { ac->position.x, ac->position.y });
-			//airCraftOct.insert(ac, Boundf{ac->position.x, ac->position.y, ac->distanceToGround, MAP_WIDTH, MAP_HEIGHT, 1});
+			qt._push(ac, { ac->position.x, ac->position.y });
 		}
-		ac = generateRandomAirCraft(0, MAP_WIDTH, MAP_HEIGHT, 0);
+		ac = generateRandomAirCraft(0, 10000, 10000);
 		airCraftVec.push_back(ac);
 		qt._push(ac, { ac->position.x, ac->position.y });
-		bool o = qt._collide(ac, 10, 10);
-
+		auto g = qt._collide(ac, 10, 10);
+		qt.~QT();
 		//86 400
 		timeScale = 1.0f / 3600.0f;
 	}
@@ -102,7 +82,7 @@ private:
 		return { start, end };
 	}
 
-	AirCraft* generateRandomAirCraft(int idx, int mapWidth, int mapHeight, int a) {
+	AirCraft* generateRandomAirCraft(int idx, int mapWidth, int mapHeight) {
 		std::pair<glm::fvec2, glm::fvec2> s_e;
 
 		s_e = generateRandomPath(mapHeight, mapHeight);
@@ -116,27 +96,27 @@ private:
 		{
 		case 0:
 			ballon = new Ballon{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.000005f * a }) * BaseIconScaleMatrix, &ballon->LongId);
+			r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
 			jet = new Jet{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{jet->position.x, jet->position.y, 0.000005f * a}) * BaseIconScaleMatrix, &jet->LongId);
+			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }) * BaseIconScaleMatrix, &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
-			 helicopter = new Helicopter{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_HELICOPTER, glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y, 0.000005f * a }) * BaseIconScaleMatrix, &helicopter->LongId);
+			helicopter = new Helicopter{ s_e.first, s_e.second };
+			r.newObject(RENDER_MODEL_HELICOPTER, glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y, 0.05f }) * BaseIconScaleMatrix, &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
 			plane = new Plane{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_PLANE, glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y,0.000005f * a }) * BaseIconScaleMatrix, &plane->LongId);
+			r.newObject(RENDER_MODEL_PLANE, glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }) * BaseIconScaleMatrix, &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
 			glider = new Glider{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_GLIDER, glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.000005f * a }) * BaseIconScaleMatrix, &glider->LongId);
+			r.newObject(RENDER_MODEL_GLIDER, glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }) * BaseIconScaleMatrix, &glider->LongId);
 			return (AirCraft*)glider;
 
 		default:
-			AM_ASSERT("GenerateRandomAirCraft idx out of bound");
+			//AM_ASSERT("GenerateRandomAirCraft idx out of bound");
 			break;
 		}
 	}
@@ -157,10 +137,8 @@ private:
 		//airCraft->angle;
 	}
 private:
-
 	std::vector<AirCraft*> airCraftVec;
-	QT<AirCraft> qt{10000,10000};
-	std::vector<StaticObj> airPorts;
+	QT<AirCraft> qt{10000, 10000};
 
 	RenderGL r;
 	VertexBuffer vertexBuff;
