@@ -16,14 +16,15 @@
 #include <utility>
 #include <random>
 
-#define BEZIER_PATCH_AMOUNT 3
+#define BEZIER_PATCH_AMOUNT 4
 
 using namespace glm;
 
 typedef struct BezierCurveParameters
 {
 	vec2 str_pos;
-	vec2 mid_pos;
+	vec2 mid0_pos;
+	vec2 mid1_pos;
 	vec2 end_pos;
 };
 

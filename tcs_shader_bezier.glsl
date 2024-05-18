@@ -1,5 +1,5 @@
 #version 430
-layout (vertices = 3) out;
+layout (vertices = 4) out;
 
 uniform float BezierQuality;
 
@@ -12,7 +12,7 @@ void main()
         gl_TessLevelOuter[2] = BezierQuality;
         gl_TessLevelOuter[3] = BezierQuality;
 
-        gl_TessLevelInner[0] = BezierQuality;
-        gl_TessLevelInner[1] = BezierQuality;
+        //gl_TessLevelInner[0] = BezierQuality;
+        //gl_TessLevelInner[1] = BezierQuality;
 
 }

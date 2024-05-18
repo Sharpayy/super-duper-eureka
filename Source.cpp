@@ -5,6 +5,11 @@
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
 
+vec2 GetDir(float a)
+{
+	return vec2(cos(a), sin(a));
+}
+
 typedef struct _RenderableMapSettings
 {
 	float MoveX;
@@ -359,21 +364,25 @@ int main(int argc, char** argv)
 
 
 	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
-	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
-	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
-	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
-	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
 
-	BezierProg.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
-	printf(debugInfo);
+
+
+
+	vec2 inFlightDirection = vec2(0.0f, 1.0f);//normalize(vec2(0.0f, 1.0f));
+	vec2 outFlightDirection = vec2(0.0f, 1.0f);//GetDir(radians(-90.0f));
+
+	float inLength = 150.0f;
+	float outLength = 150.0f;
+
+	FlyPath fp = FlyPath(vec2(0.0f, 0.0f), vec2(300.0f, 300.0f));
+	fp.AddPoint(vec2(50.0f, 210.0f));
+	fp.AddPoint(vec2(-210.0f, 380.0f));
 
 	BezierCurveParameters p[4];
-	p[0] = BezierCurveParameters{vec2(0.0f, 0.0f), vec2(120.0f, 150.0f), vec2(0.0f, 200.0f)};
-	p[1] = BezierCurveParameters{vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(-100.0f, -200.0f)};
-	p[2] = BezierCurveParameters{ vec2(-100.0f, -100.0f), vec2(150.0f, 70.0f), vec2(100.0f, 200.0f) };
-	p[3] = BezierCurveParameters{ vec2(-300.0f, -100.0f), vec2(250.0f, 70.0f), vec2(-150.0f, -100.0f) };
+	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
 
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 50.0f);
+	uint32_t br = 3;
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 5.0f);
 	Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
@@ -383,7 +392,7 @@ int main(int argc, char** argv)
 	clock_t evLoopTimeTarget = 1000;
 
 	glEnable(GL_DEPTH_TEST);
-	glLineWidth(3.0f);
+	glLineWidth(2.0f);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
@@ -429,11 +438,11 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 
-		RenderElapsedTime.TimeStart();
+		//RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(4);
-		RenderElapsedTime.TimeEnd();
+		Bezier.Render(br);
+		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
 		{
