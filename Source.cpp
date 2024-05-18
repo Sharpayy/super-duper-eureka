@@ -431,9 +431,10 @@ int main(int argc, char** argv)
 		
 
 		RenderElapsedTime.TimeStart();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
 		amanager.onUpdate();
-		Bezier.Render(2);
+		
+		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
