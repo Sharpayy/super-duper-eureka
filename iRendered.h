@@ -380,7 +380,14 @@ public:
 
 	uint32_t MapObjectToSpaceIdx(uint32_t obj);
 	uint32_t GetObjectIdSpaceIdx(uint32_t obj);
-	bool IsObjectActiveAlt(RENDER_OBJECT_ID o_id);
+
+	void PreuseModelShader(uint32_t m_id);
+	void MakeModelRef(uint32_t new_m_id, uint32_t ref_m_id);
+	void SetModelShader(Program shdr);
+	void SetModelVertexArray(VertexBuffer vtx, uint32_t vtx_cnt);
+	void SetModelTexture(Texture2D tex);
+	VertexBuffer GetModelVertexArray();
+	uint32_t GetModelObjectCapacity();
 
 	void UpdateShaderIdSpace(uint32_t m_id);
 

@@ -13,11 +13,13 @@ SDL_Point mousePos;
 
 class AManager {
 public:
+	std::vector<AirCraft*> airCraftVec;
 	AManager() = default;
 	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program) {
 		this->r = r;
 		this->vertexBuff = vertexBuff;
 		this->program = program;
+		m_alpha = 0.002f;
 
 		int x, y, c;
 		Texture2D MapTexture;
@@ -47,8 +49,8 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 100000; i++) {
-			ac = generateRandomAirCraft(i % 5, 10000, 10000);
+		for (int i = 0; i < 5000; i++) {
+			ac = generateRandomAirCraft(1, 400, 400);
 			airCraftVec.push_back(ac);
 			qt._push(ac, { ac->position.x, ac->position.y});
 		}
@@ -97,6 +99,7 @@ private:
 		std::pair<glm::fvec2, glm::fvec2> s_e;
 
 		s_e = generateRandomPath(mapHeight, mapHeight);
+		m_alpha += 0.005f;
 
 		Glider* glider;
 		Jet* jet;
@@ -107,23 +110,23 @@ private:
 		{
 		case 0:
 			ballon = new Ballon{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
+			r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, m_alpha }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
 			jet = new Jet{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{jet->position.x, jet->position.y, 0.05f}), &jet->LongId);
+			r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), glm::fvec3{jet->position.x, jet->position.y, m_alpha }), &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
 			 helicopter = new Helicopter{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_HELICOPTER, glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
+			r.newObject(RENDER_MODEL_HELICOPTER, glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , m_alpha }), &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
 			plane = new Plane{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_PLANE, glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
+			r.newObject(RENDER_MODEL_PLANE, glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, m_alpha }), &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
 			glider = new Glider{ s_e.first, s_e.second };
-			r.newObject(RENDER_MODEL_GLIDER, glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
+			r.newObject(RENDER_MODEL_GLIDER, glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, m_alpha }), &glider->LongId);
 			return (AirCraft*)glider;
 
 		default:
@@ -146,13 +149,15 @@ private:
 
 		//airCraft->angle;
 	}
+	
 private:
-	std::vector<AirCraft*> airCraftVec;
 	QT<AirCraft> qt = {11000, 11000};
 
 	RenderGL r;
 	VertexBuffer vertexBuff;
 	Program program;
+
+	float m_alpha;
 
 	float timeScale;
 };

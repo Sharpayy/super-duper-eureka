@@ -407,9 +407,6 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 	RenderModelDetails* obj = GetMdObject(sObjectIdx);
 
-	if (obj->render == true)
-		return;
-
 	NotifyFreeIdx(o_id, obj->matrixId);
 	md->objects.del_last();
 	md->objAmount--;
@@ -497,6 +494,9 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 	uint32_t lastObjIdx = (GetIdFirstMdInactiveObject() - 1);
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
 
+	if (GetMdObject(MapObjectToSpaceIdx(cObjectIdx))->objectId != o_id)
+		__debugbreak();
+
 	if ((cObjectIdx < md->activeObjects) == false)
 		return;
 
@@ -553,6 +553,40 @@ bool RenderGL::IsObjectActive(RENDER_OBJECT_ID o_id)
 {
 	uint32_t ObjIdx = MapToObjectIdx(o_id);
 	return (ObjIdx < md->activeObjects);
+}
+
+void RenderGL::MakeModelRef(uint32_t new_m_id, uint32_t ref_m_id)
+{
+	RenderModel* copy_model = GetRenderModelFromIndex(ref_m_id);
+
+	*(idTranslator.base_ptr + new_m_id) = models.c_size;
+	models.push_back(copy_model);
+}
+
+void RenderGL::SetModelShader(Program shdr)
+{
+	md->std_prgm = shdr;
+}
+
+void RenderGL::SetModelVertexArray(VertexBuffer vtx, uint32_t vtx_cnt)
+{
+	md->vao = vtx;
+	md->vertices = vtx_cnt;
+}
+
+void RenderGL::SetModelTexture(Texture2D tex)
+{
+	md->std_texture2d = tex;
+}
+
+VertexBuffer RenderGL::GetModelVertexArray()
+{
+	return md->vao;
+}
+
+uint32_t RenderGL::GetModelObjectCapacity()
+{
+	return md->objects.reserved;
 }
 
 void RenderGL::UpdateShaderIdSpace(uint32_t m_id)

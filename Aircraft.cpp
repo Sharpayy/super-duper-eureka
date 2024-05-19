@@ -67,7 +67,6 @@ uint32_t FlyPath::FetchRenderInfo(BezierCurveParametersA* data, uint32_t max)
 void FlyPath::AddPoint(glm::vec2 p)
 {
 	path.at(path.size() - 1).end_pos = p;
-	//path.end()->end_pos = p;
 	path.push_back(FlyPathPoint(p, destination));
 	UpdatePath();
 }
@@ -77,7 +76,7 @@ void FlyPath::UpdatePath()
 	FlyPathPoint* fpp;
 	FlyPathPoint* nfpp;
 
-	float len = 120.0f;
+	float len = 100.0f;
 
 	for (uint32_t i = 0; i != path.size(); i++)
 	{
