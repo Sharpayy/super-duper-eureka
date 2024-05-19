@@ -4,29 +4,38 @@ AirCraft::AirCraft(glm::fvec2 position) {
 	this->position = position;
 }
 
+uint8_t AirCraft::getType() {
+	return this->type;
+}
+
 Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination) {
 	this->position = position;
 	this->destination = destination;
+	this->type = RENDER_MODEL_BALLON;
 }
 
 Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination) {
 	this->position = position;
 	this->destination = destination;
+	this->type = RENDER_MODEL_JET;
 }
 
 Jet::Jet(glm::fvec2 position, glm::fvec2 destination) {
 	this->position = position;
 	this->destination = destination;
+	this->type = RENDER_MODEL_JET;
 }
 
 Plane::Plane(glm::fvec2 position, glm::fvec2 destination) {
 	this->position = position;
 	this->destination = destination;
+	this->type = RENDER_MODEL_PLANE;
 }
 
 Glider::Glider(glm::fvec2 position, glm::fvec2 destination) {
 	this->position = position;
 	this->destination = destination;
+	this->type = RENDER_MODEL_GLIDER;
 }
 
 void AirCraft::onUpdate() {

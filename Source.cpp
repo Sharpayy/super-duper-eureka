@@ -382,7 +382,7 @@ int main(int argc, char** argv)
 	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
 
 	uint32_t br = 3;
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 5.0f);
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 20.0f);
 	Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);

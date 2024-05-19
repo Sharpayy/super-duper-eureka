@@ -2,6 +2,7 @@
 #include <glm.hpp>
 #include <queue>
 #include <vector>
+#include "Renderable.h"
 
 typedef struct BezierCurveParametersA
 {
@@ -22,13 +23,6 @@ public:
 };
 
 typedef unsigned long long uint64_t;
-
-class Renderable
-{
-public:
-	uint64_t LongId;
-};
-
 
 class FlyPath
 {
@@ -70,6 +64,11 @@ public:
 	float acceleration;
 	float angle;
 	glm::fvec2 destination;
+	
+	uint8_t getType();
+
+protected:
+	uint8_t type;
 };
 
 class Ballon : public AirCraft {
