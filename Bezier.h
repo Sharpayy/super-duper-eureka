@@ -31,10 +31,13 @@ typedef struct BezierCurveParameters
 class BezierRenderer
 {
 public:
+	BezierRenderer() = default;
+
 	Program bezierProgram;
 	VertexBuffer bezierVertex;
 	Buffer<GL_ARRAY_BUFFER> bezierData;
 	uint32_t count;
+	uint32_t maxCount;
 
 	float quality;
 	vec4 color;
@@ -47,7 +50,6 @@ public:
 	void UpdateData(BezierCurveParameters* data, uint32_t amount, uint32_t amountOffset);
 	void SetQuality(float quality_);
 	void SetColor(vec4 color_);
-
 
 };
 

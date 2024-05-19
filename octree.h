@@ -154,16 +154,16 @@ private:
     public:
         Node() = default;
         void _init(T* data = nullptr, PointQT* p = nullptr) {
+            for (int i = 0; i < 4; i++) {
+                if(nodes[i] == NULL) nodes[i] = new Node{};
+            }
             this->p = p;
             this->data = data;
-            for (int i = 0; i < 4; i++) {
-                nodes[i] = new Node{};
-            }
         }
         ~Node() {
+            delete this->p;
             this->p = nullptr;
             this->data = nullptr;
-            //delete nodes[];
         }
 
         PointQT* p;
@@ -243,15 +243,15 @@ private:
 
     void _removeDataRec(Node* n) {
         if (n->data || n == root) {
-            n->~Node();
             for (int i = 0; i < 4; i++) {
                 _removeDataRec(n->nodes[i]);
             }
+            n->~Node();
         }
     }
 
     bool _collideRec(Node* n, const RectQT& ob1, Node* ignore) {
-        if (n) {
+        if (n->data || n == root) {
             if (n != ignore && n->p) {
                 RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
                 if (ob1.intersect(ob2)) {

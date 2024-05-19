@@ -377,8 +377,8 @@ int main(int argc, char** argv)
 	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
 
 	uint32_t br = 3;
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 32.0f);
-	Bezier.UpdateData(p, 4, 0);
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 200, 32.0f);
+	//Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -427,7 +427,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ r, Square, iconProgram };
+	AManager amanager{ r, Square, iconProgram, Bezier};
 	while (true)
 	{
 		evLoopStart = clock();
@@ -438,7 +438,7 @@ int main(int argc, char** argv)
 		//RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(br);
+		Bezier.Render(10);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)

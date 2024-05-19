@@ -3,7 +3,8 @@
 BezierRenderer::BezierRenderer(Program program, uint32_t cnt, float quality_ = 2.0f)
 {
 	quality = quality_;
-	count = cnt;
+	maxCount = cnt;
+	count = 0;
 	bezierProgram = program;
 	color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
@@ -27,19 +28,27 @@ BezierRenderer::BezierRenderer(Program program, uint32_t cnt, float quality_ = 2
 
 void BezierRenderer::Render(uint32_t amount = 0)
 {
+	uint32_t renderAmount;
 	if (amount == 0)
-		return;
+		renderAmount = count;
+	else
+		renderAmount = amount;
 
 	bezierProgram.use();
 	bezierVertex.bind();
 
-	glDrawArrays(GL_PATCHES, 0, amount * BEZIER_PATCH_AMOUNT);
+	glDrawArrays(GL_PATCHES, 0, renderAmount * BEZIER_PATCH_AMOUNT);
 }
 
 void BezierRenderer::UpdateData(BezierCurveParameters* data, uint32_t amount, uint32_t amountOffset)
 {
+	if (amount + amountOffset > maxCount)
+		return;
+
+	count = amountOffset + amount;
 	bezierData.bind();
 	glBufferSubData(GL_ARRAY_BUFFER, sizeof(BezierCurveParameters) * amountOffset, sizeof(BezierCurveParameters) * amount, data);
+
 }
 
 void BezierRenderer::SetQuality(float quality_)

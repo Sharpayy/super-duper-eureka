@@ -31,7 +31,7 @@ public:
 	uint32_t currentPathSection;
 	glm::vec2 destination;
 	
-	FlyPath();
+	FlyPath() = default;
 	FlyPath(glm::vec2 start, glm::vec2 end);
 
 	uint32_t FetchRenderInfo(BezierCurveParametersA* data, uint32_t max);
@@ -40,8 +40,12 @@ public:
 	void ChangeDestinatination(glm::vec2 dest);
 	void AddPoint(glm::vec2 p);
 
-private:
+	BezierCurveParametersA* getData();
 
+	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt);
+
+private:
+	float t;
 	void UpdatePath();
 };
 
@@ -54,16 +58,16 @@ private:
 class AirCraft : public Renderable {
 public:
 	AirCraft() = default;
-	AirCraft(glm::fvec2 position);
+	AirCraft(glm::fvec2 position, glm::fvec2 destination);
 
 	void onUpdate();
 
-	float distanceToGround;
 	glm::fvec2 position;
+	FlyPath path;
+	float distanceToGround;
 	float speed;
 	float acceleration;
 	float angle;
-	glm::fvec2 destination;
 	
 	uint8_t getType();
 
