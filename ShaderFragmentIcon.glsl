@@ -1,4 +1,4 @@
-#version 430 core
+#version 430
 
 layout(early_fragment_tests) in;
 
@@ -10,8 +10,10 @@ layout(std140, binding = 1) uniform MVP_DATA
 };
 
 uniform sampler2D image0;
+uniform uint SelectedModelId;
 
 out vec4 FragColor;
+flat in uint ModelId;
 in vec2 uv_o;
 
 void main()
@@ -21,5 +23,8 @@ void main()
 	if (renderColor.a < 0.5)
 		discard;
 
-	FragColor = renderColor * angle;
+	if (SelectedModelId == ModelId)
+		renderColor = renderColor * vec4(0.0, 1.0, 0.0, 1.0);
+
+	FragColor = renderColor;
 }

@@ -234,6 +234,9 @@ int main(int argc, char** argv)
 	iconProgram.programAddShader(shdrVertIcon.id);
 	iconProgram.programCompile();
 
+	iconProgram.programGetDebugInfo(debugInfo, 2048);
+	printf(debugInfo);
+
 	Program simpleProgram = Program();
 	simpleProgram.programAddShader(shdrFrgOneColor.id);
 	simpleProgram.programAddShader(shdrVertex.id);
@@ -273,7 +276,9 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	BindSampler("image0", 0, iconProgram.id);
 	uint32_t ulIconScale = glGetUniformLocation(iconProgram.id, "uIconScale");
-	glUniform1f(ulIconScale, 1.0f);
+	uint32_t ulSelectedModel = glGetUniformLocation(iconProgram.id, "SelectedModelId");
+	glUniform1f(ulIconScale, BaseIconScale);
+	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
@@ -314,7 +319,6 @@ int main(int argc, char** argv)
 
 	RenderGL r = RenderGL(100);
 	r.setCameraMatrix(glm::mat4(1.0f));
-	//r.setProjectionMatrix(glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f));
 	r.setProjectionMatrix(glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f));
 	r.UpdateShaderData();
 
@@ -365,15 +369,6 @@ int main(int argc, char** argv)
 
 	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
 
-
-
-
-	vec2 inFlightDirection = vec2(0.0f, 1.0f);//normalize(vec2(0.0f, 1.0f));
-	vec2 outFlightDirection = vec2(0.0f, 1.0f);//GetDir(radians(-90.0f));
-
-	float inLength = 150.0f;
-	float outLength = 150.0f;
-
 	FlyPath fp = FlyPath(vec2(0.0f, 0.0f), vec2(300.0f, 300.0f));
 	fp.AddPoint(vec2(50.0f, 210.0f));
 	fp.AddPoint(vec2(-210.0f, 380.0f));
@@ -382,7 +377,7 @@ int main(int argc, char** argv)
 	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
 
 	uint32_t br = 3;
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 20.0f);
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 32.0f);
 	Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
@@ -429,8 +424,10 @@ int main(int argc, char** argv)
 	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
 	//r.md->std_texture2d = newText;
 
+	iconProgram.use();
+	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ r, Square, simpleProgram };
+	AManager amanager{ r, Square, iconProgram };
 	while (true)
 	{
 		evLoopStart = clock();
