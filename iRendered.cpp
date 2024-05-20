@@ -493,9 +493,7 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 {
 	uint32_t lastObjIdx = (GetIdFirstMdInactiveObject() - 1);
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
-
-	if (GetMdObject(MapObjectToSpaceIdx(cObjectIdx))->objectId != o_id)
-		__debugbreak();
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
 	if ((cObjectIdx < md->activeObjects) == false)
 		return;
@@ -505,7 +503,7 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 	if (lastObjIdx == cObjectIdx)
 		return;
 
-	SwapObjectIdxOrder(GetIdFirstMdInactiveObject(), o_id);
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
 	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
 }
 
@@ -531,6 +529,7 @@ void RenderGL::DisableObjectNoSync(RENDER_OBJECT_ID o_id)
 {
 	uint32_t lastObjIdx = (GetIdFirstMdInactiveObject() - 1);
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
+	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
 	if ((cObjectIdx < md->activeObjects) == false)
 		return;
@@ -540,7 +539,7 @@ void RenderGL::DisableObjectNoSync(RENDER_OBJECT_ID o_id)
 	if (lastObjIdx == cObjectIdx)
 		return;
 
-	SwapObjectIdxOrder(GetIdFirstMdInactiveObject(), o_id);
+	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
 	SwapInBufferIdxOrderNoSync(cObjectIdx, lastObjIdx);
 }
 

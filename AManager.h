@@ -12,6 +12,7 @@ SDL_Point mousePos;
 
 class AManager {
 public:
+	std::vector<AirCraft*> AirCraftVec;
 	AManager() = default;
 	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program, BezierRenderer& br) {
 		this->r = r;
@@ -61,8 +62,9 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 500; i++) {
-			ac = generateRandomAirCraft(i % 5, 800, 800);
+		for (int i = 0; i < 1; i++) {
+			ac = generateRandomAirCraft(2, 800, 800);
+			ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -127,29 +129,26 @@ private:
 
 		std::pair<glm::fvec2, glm::fvec2> s_e;
 		s_e = generateRandomPath();
-
-		glm::fvec2 pos;
-		pos = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 		switch (idx)
 		{
 		case 0:
-			ballon = new Ballon{ s_e.first, s_e.second };
+			ballon = new Ballon{ s_e.first, s_e.second, RENDER_MODEL_BALLON };
 			r.newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
-			jet = new Jet{ s_e.first, s_e.second };
+			jet = new Jet{ s_e.first, s_e.second, RENDER_MODEL_JET };
 			r.newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
-			helicopter = new Helicopter{ s_e.first, s_e.second };
+			helicopter = new Helicopter{ s_e.first, s_e.second, RENDER_MODEL_HELICOPTER };
 			r.newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
-			plane = new Plane{ s_e.first, s_e.second };
+			plane = new Plane{ s_e.first, s_e.second, RENDER_MODEL_PLANE };
 			r.newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
-			glider = new Glider{ s_e.first, s_e.second };
+			glider = new Glider{ s_e.first, s_e.second, RENDER_MODEL_GLIDER };
 			r.newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
 			return (AirCraft*)glider;
 
@@ -198,9 +197,10 @@ private:
 	}
 
 	void handleAirCraftsMovement(AirCraft*& ac, float t) {
-		ac->position = ac->path.getBezierPosition(ac->path.getData(), t);
+		ac->SetAngle(ac->CalcAngle());
+		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
 		r.BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }), true);
+		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f}) * glm::rotate(glm::mat4(1.0f), ac->angle + 1.5707963267948966f, glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftLogic() {
@@ -208,7 +208,7 @@ private:
 
 		std::vector<AirCraft*> AirCraftsToRemove;
 		for (AirCraft* ac : AirCraftVec) {
-			t = 0.001f;
+			t = 0.00003f;
 			handleAirCraftsMovement(ac, t);
 			if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
 				AirCraftsToRemove.push_back(ac);
@@ -233,7 +233,6 @@ private:
 		//airCraft->angle;
 	}
 private:
-	std::vector<AirCraft*> AirCraftVec;
 	QT<AirCraft> qtAc = { 2000, 2000 };
 
 	std::vector<StaticObj*> AirPortsVec;

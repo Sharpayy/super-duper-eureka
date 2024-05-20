@@ -1,6 +1,22 @@
 #include "Aircraft.h"
 
-AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination) {
+float AirCraft::CalcAngle()
+{
+	glm::vec2 b = path.getBezierPosition(path.GetCurrentSection(), 0.0f, false);
+	glm::vec2 a = path.getBezierPosition(path.GetCurrentSection(), 0.00001f, false);
+	glm::vec2 angle = normalize(b - a);
+	//printf("%f %f\n", angle.x, angle.y);
+	return atan2f(angle.y, angle.x);
+}
+
+Glider::Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
+	this->position = position;
+	path = { position, destination };
+
+	this->type = type;
+}
+
+AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 }
@@ -9,41 +25,41 @@ uint8_t AirCraft::getType() {
 	return this->type;
 }
 
-Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination) {
+Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
-	this->type = RENDER_MODEL_BALLON;
+
+	this->type = type;
 }
 
-Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination) {
+Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
-	this->type = RENDER_MODEL_JET;
+
+	this->type = type;
 }
 
-Jet::Jet(glm::fvec2 position, glm::fvec2 destination) {
+Jet::Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
-	this->type = RENDER_MODEL_JET;
+	this->type = type;
 }
 
-Plane::Plane(glm::fvec2 position, glm::fvec2 destination) {
+Plane::Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
-	this->type = RENDER_MODEL_PLANE;
-}
-
-Glider::Glider(glm::fvec2 position, glm::fvec2 destination) {
-	this->position = position;
-	path = { position, destination };
-
-	this->type = RENDER_MODEL_GLIDER;
+	this->type = type;
 }
 
 void AirCraft::onUpdate() {
 
+}
+
+void AirCraft::SetAngle(float a)
+{
+	angle = a;
 }
 
 glm::vec2 FlyPathPoint::GetPoint()
@@ -73,21 +89,41 @@ FlyPath::FlyPath(glm::vec2 start, glm::vec2 end)
 	UpdatePath();
 }
 
-glm::fvec2 FlyPath::getBezierPosition(BezierCurveParametersA* param, float dt) {
+glm::fvec2 FlyPath::getBezierPosition(BezierCurveParametersA* param, float dt, bool change) {
 
 	glm::vec2 p0 = param->str_pos;
 	glm::vec2 p1 = param->mid0_pos;
 	glm::vec2 p2 = param->mid1_pos;
 	glm::vec2 p3 = param->end_pos;
-	
+
 	this->t += dt;
+
 	glm::fvec2 Point = (1 - t) * (1 - t) * (1 - t) * p0 + 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t * p3;
+
+	if (!change)
+		this->t -= dt;
+
+	if (t >= 1.0f)
+	{
+		t = 0.0f;
+		currentPathSection++;
+	}
 
 	return Point;
 }
 
+float FlyPath::GetCurrentSectionDistance()
+{
+	return t;
+}
+
 BezierCurveParametersA* FlyPath::getData() {
 	return path.data();
+}
+
+BezierCurveParametersA* FlyPath::GetCurrentSection()
+{
+	return (BezierCurveParametersA*)&path.at(currentPathSection);
 }
 
 uint32_t FlyPath::FetchRenderInfo(BezierCurveParametersA* data, uint32_t max)

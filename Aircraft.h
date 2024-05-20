@@ -1,5 +1,6 @@
 #pragma once
 #include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 #include <queue>
 #include <vector>
 #include "Renderable.h"
@@ -41,8 +42,10 @@ public:
 	void AddPoint(glm::vec2 p);
 
 	BezierCurveParametersA* getData();
+	BezierCurveParametersA* GetCurrentSection();
 
-	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt);
+	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt, bool change = true);
+	float GetCurrentSectionDistance();
 
 private:
 	float t;
@@ -58,7 +61,7 @@ private:
 class AirCraft : public Renderable {
 public:
 	AirCraft() = default;
-	AirCraft(glm::fvec2 position, glm::fvec2 destination);
+	AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 
 	void onUpdate();
 
@@ -68,8 +71,10 @@ public:
 	float speed;
 	float acceleration;
 	float angle;
-	
+
 	uint8_t getType();
+	float CalcAngle();
+	void SetAngle(float a);
 
 protected:
 	uint8_t type;
@@ -78,29 +83,29 @@ protected:
 class Ballon : public AirCraft {
 public:
 	Ballon() = default;
-	Ballon(glm::fvec2 position, glm::fvec2 destination);
+	Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Jet : public AirCraft {
 public:
 	Jet() = default;
-	Jet(glm::fvec2 position, glm::fvec2 destination);
+	Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Helicopter : public AirCraft {
 public:
 	Helicopter() = default;
-	Helicopter(glm::fvec2 position, glm::fvec2 destination);
+	Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Glider : public AirCraft {
 public:
 	Glider() = default;
-	Glider(glm::fvec2 position, glm::fvec2 destination);
+	Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Plane : public AirCraft {
 public:
 	Plane() = default;
-	Plane(glm::fvec2 position, glm::fvec2 destination);
+	Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
