@@ -1,6 +1,6 @@
 #include "Aircraft.h"
 
-AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination) {
+AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 }
@@ -9,37 +9,39 @@ uint8_t AirCraft::getType() {
 	return this->type;
 }
 
-Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination) {
+Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
-	this->type = RENDER_MODEL_BALLON;
+
+	this->type = type;
 }
 
-Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination) {
+Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
-	this->type = RENDER_MODEL_JET;
+
+	this->type = type;
 }
 
-Jet::Jet(glm::fvec2 position, glm::fvec2 destination) {
+Jet::Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
-	this->type = RENDER_MODEL_JET;
+	this->type = type;
 }
 
-Plane::Plane(glm::fvec2 position, glm::fvec2 destination) {
+Plane::Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
-	this->type = RENDER_MODEL_PLANE;
+	this->type = type;
 }
 
-Glider::Glider(glm::fvec2 position, glm::fvec2 destination) {
+Glider::Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
-	this->type = RENDER_MODEL_GLIDER;
+	this->type = type;
 }
 
 void AirCraft::onUpdate() {
@@ -84,6 +86,10 @@ glm::fvec2 FlyPath::getBezierPosition(BezierCurveParametersA* param, float dt) {
 	glm::fvec2 Point = (1 - t) * (1 - t) * (1 - t) * p0 + 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t * p3;
 
 	return Point;
+}
+
+void FlyPath::resetSteps() {
+	t = 0.0f;
 }
 
 BezierCurveParametersA* FlyPath::getData() {

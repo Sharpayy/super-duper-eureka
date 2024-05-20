@@ -43,6 +43,7 @@ public:
 	BezierCurveParametersA* getData();
 
 	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt);
+	void resetSteps();
 
 private:
 	float t;
@@ -58,7 +59,7 @@ private:
 class AirCraft : public Renderable {
 public:
 	AirCraft() = default;
-	AirCraft(glm::fvec2 position, glm::fvec2 destination);
+	AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 
 	void onUpdate();
 
@@ -78,29 +79,29 @@ protected:
 class Ballon : public AirCraft {
 public:
 	Ballon() = default;
-	Ballon(glm::fvec2 position, glm::fvec2 destination);
+	Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Jet : public AirCraft {
 public:
 	Jet() = default;
-	Jet(glm::fvec2 position, glm::fvec2 destination);
+	Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Helicopter : public AirCraft {
 public:
 	Helicopter() = default;
-	Helicopter(glm::fvec2 position, glm::fvec2 destination);
+	Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Glider : public AirCraft {
 public:
 	Glider() = default;
-	Glider(glm::fvec2 position, glm::fvec2 destination);
+	Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
 
 class Plane : public AirCraft {
 public:
 	Plane() = default;
-	Plane(glm::fvec2 position, glm::fvec2 destination);
+	Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 };
