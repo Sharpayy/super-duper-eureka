@@ -14,6 +14,7 @@ uniform uint SelectedModelId;
 
 out vec4 FragColor;
 flat in uint ModelId;
+flat in float checko;
 in vec2 uv_o;
 
 void main()
@@ -23,8 +24,8 @@ void main()
 	if (renderColor.a < 0.5)
 		discard;
 
-	if (SelectedModelId == ModelId)
-		renderColor = renderColor * vec4(0.0, 1.0, 0.0, 1.0);
+	if (checko == 1)
+		renderColor = vec4(0.67, 0.85, 0.9, 1.0);
 
 	FragColor = renderColor;
 }
