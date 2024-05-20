@@ -31,6 +31,8 @@ typedef struct BezierCurveParameters
 class BezierRenderer
 {
 public:
+	BezierRenderer() = default;
+
 	Program bezierProgram;
 	VertexBuffer bezierVertex;
 	Buffer<GL_ARRAY_BUFFER> bezierData;

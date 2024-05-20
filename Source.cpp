@@ -10,23 +10,6 @@ vec2 GetDir(float a)
 	return vec2(cos(a), sin(a));
 }
 
-void AddCollisionBuffer(VertexBuffer vao, uint32_t div, uint32_t amount, uint32_t* id)
-{
-	uint32_t cb;
-	glGenBuffers(1, &cb);
-
-	vao.bind();
-	glBindBuffer(GL_ARRAY_BUFFER, cb);
-	glBufferData(GL_ARRAY_BUFFER, amount * 4, NULL, GL_DYNAMIC_DRAW);
-
-	vao.addAttrib(GL_FLOAT, 2, 1, 4, 0);
-	vao.enableAttrib(2);
-
-	glVertexAttribDivisor(2, 1);
-	glBindVertexArray(0);
-	*id = cb;
-}
-
 typedef struct _RenderableMapSettings
 {
 	float MoveX;
@@ -384,7 +367,7 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, -5.0f)));
+	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
 
 	FlyPath fp = FlyPath(vec2(0.0f, 0.0f), vec2(300.0f, 300.0f));
 	fp.AddPoint(vec2(50.0f, 210.0f));
@@ -394,8 +377,8 @@ int main(int argc, char** argv)
 	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
 
 	uint32_t br = 3;
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 32, 32.0f);
-	Bezier.UpdateData(p, 4, 0);
+	BezierRenderer Bezier = BezierRenderer(BezierProg, 200, 32.0f);
+	//Bezier.UpdateData(p, 4, 0);
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -431,31 +414,20 @@ int main(int argc, char** argv)
 		}
 	}
 
+	//Texture2D newText = { texArr, w, h, GL_RED, GL_RGBA };
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//newText.genMipmap();
+	////r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, newText, 50);
+	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
+	//r.md->std_texture2d = newText;
+
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ r, Square, iconProgram };
-
-	r.BindActiveModel(RENDER_MODEL_BALLON);
-	VertexBuffer cvao = r.GetModelVertexArray();
-
-	float data = 1.0f;
-	uint32_t bid;
-	AddCollisionBuffer(cvao, 0, r.GetModelObjectCapacity(), &bid);
-	glBindBuffer(GL_ARRAY_BUFFER, bid);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 4, &data);
-	glBufferSubData(GL_ARRAY_BUFFER, 4, 4, &data);
-
-	for (int i = 0; i < 2000; i++)
-	{
-		r.DisableObjectL(amanager.airCraftVec.at(i)->LongId);
-	}
-
-	r.DisableObjectL(amanager.airCraftVec.at(4999)->LongId);
-	r.DisableObjectL(amanager.airCraftVec.at(4969)->LongId);
-	r.DisableObjectL(amanager.airCraftVec.at(4989)->LongId);
-
-
+	AManager amanager{ r, Square, iconProgram, Bezier};
 	while (true)
 	{
 		evLoopStart = clock();
@@ -466,7 +438,7 @@ int main(int argc, char** argv)
 		//RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(br);
+		Bezier.Render(10);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
