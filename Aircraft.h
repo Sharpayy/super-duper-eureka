@@ -1,5 +1,6 @@
 #pragma once
 #include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
 #include <queue>
 #include <vector>
 #include "Renderable.h"
@@ -41,9 +42,10 @@ public:
 	void AddPoint(glm::vec2 p);
 
 	BezierCurveParametersA* getData();
+	BezierCurveParametersA* GetCurrentSection();
 
-	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt);
-	void resetSteps();
+	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt, bool change = true);
+	float GetCurrentSectionDistance();
 
 private:
 	float t;
@@ -69,8 +71,10 @@ public:
 	float speed;
 	float acceleration;
 	float angle;
-	
+
 	uint8_t getType();
+	float CalcAngle();
+	void SetAngle(float a);
 
 protected:
 	uint8_t type;

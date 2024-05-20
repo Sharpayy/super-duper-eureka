@@ -495,12 +495,6 @@ void RenderGL::DisableObject(RENDER_OBJECT_ID o_id)
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
 	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
-	if (GetMdObject(MapObjectToSpaceIdx(cObjectIdx))->objectId != o_id)
-		__debugbreak();
-
-	if (GetMdObject(MapObjectToSpaceIdx(cObjectIdx))->objectId != o_id)
-		__debugbreak();
-
 	if ((cObjectIdx < md->activeObjects) == false)
 		return;
 

@@ -12,6 +12,7 @@ SDL_Point mousePos;
 
 class AManager {
 public:
+	std::vector<AirCraft*> AirCraftVec;
 	AManager() = default;
 	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program, BezierRenderer& br) {
 		this->r = r;
@@ -61,8 +62,9 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 50; i++) {
-			ac = generateRandomAirCraft(1, 800, 800);
+		for (int i = 0; i < 1; i++) {
+			ac = generateRandomAirCraft(2, 800, 800);
+			ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -82,7 +84,7 @@ public:
 
 		SDL_GetMouseState(&mousePos.x, &mousePos.y);
 		if (qtAc._collidePoint(PointQT{ mousePos.x - 400, -1 * (mousePos.y - 400) }, 10, 10)) {
-			std::cout << "Collision" << "\n";
+			//std::cout << "Collision" << "\n";
 		}
 		else {
 			//std::cout << mousePos.x - 400 << "|" <<  -1 * (mousePos.y - 400) << "\n";
@@ -161,19 +163,19 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		texture.genMipmap();
-		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 5000);
+		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 500);
 	}
 
 	void generateStaticObjects(int mapWidth, int mapHeight) {
 		int i;
 		StaticObj* st;
 		glm::fvec2 position;
-		for (i = 0; i < 20; i++) {
+		for (i = 0; i < 100; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
 			//ADD THIS TO CONFIG
-			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 100, 100)) {
+			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 10, 10)) {
 				AirPortsVec.push_back(st);
 				qtAp._push(st, { st->position.x, st->position.y });
 				r.newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
@@ -195,11 +197,10 @@ private:
 	}
 
 	void handleAirCraftsMovement(AirCraft*& ac, float t) {
-		ac->position = ac->path.getBezierPosition(ac->path.getData(), t);
-		//ac->position = ac->path.getBezierPosition((BezierCurveParametersA*)&ac->path.path.at(ac->path.currentPathSection), t);
-		//if(glm::distance(ac->position, ac->path.getBezierPosition()) < 3.0f)
+		ac->SetAngle(ac->CalcAngle());
+		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
 		r.BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }), true);
+		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f}) * glm::rotate(glm::mat4(1.0f), ac->angle + 1.5707963267948966f, glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftLogic() {
@@ -207,7 +208,7 @@ private:
 
 		std::vector<AirCraft*> AirCraftsToRemove;
 		for (AirCraft* ac : AirCraftVec) {
-			t = 0.0001f;
+			t = 0.00003f;
 			handleAirCraftsMovement(ac, t);
 			if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
 				AirCraftsToRemove.push_back(ac);
@@ -232,14 +233,13 @@ private:
 		//airCraft->angle;
 	}
 private:
-	std::vector<AirCraft*> AirCraftVec;
-	QT<AirCraft> qtAc = { 900, 900 };
+	QT<AirCraft> qtAc = { 2000, 2000 };
 
 	std::vector<StaticObj*> AirPortsVec;
-	QT<StaticObj> qtAp = { 900, 900 };
+	QT<StaticObj> qtAp = { 2000, 2000 };
 
 	std::vector<StaticObj*> TowersVec;
-	QT<StaticObj> qtT = { 900, 900 };
+	QT<StaticObj> qtT = { 2000, 2000 };
 
 
 	int aircraftAmount = 0;

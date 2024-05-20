@@ -30,12 +30,9 @@ void main()
 {
 	uint MdlId = modelIdx[gl_InstanceID];
 	mat4 mModel = matModel[MdlId];
+	mat4 sModel = mat4(vec4(uIconScale, 0.0, 0.0, 0.0), vec4(0.0, uIconScale, 0.0, 0.0), vec4(0.0, 0.0, uIconScale, 0.0), vec4(0.0, 0.0, 0.0, 1.0));
 
-	mModel[0].x = mModel[0].x * uIconScale;
-	mModel[1].y = mModel[1].y * uIconScale;
-	mModel[2].z = mModel[2].z * uIconScale;
-
-	gl_Position = matProjCamera * mModel * vec4(pos, 0.0, 1.0);
+	gl_Position = matProjCamera * mModel * sModel * vec4(pos, 0.0, 1.0);
 
 	uv_o = uv_c;
 	ModelId = MdlId;

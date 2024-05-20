@@ -414,20 +414,11 @@ int main(int argc, char** argv)
 		}
 	}
 
-	//Texture2D newText = { texArr, w, h, GL_RED, GL_RGBA };
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//newText.genMipmap();
-	////r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, newText, 50);
-	//r.BindActiveModel(RENDER_MODEL_SQUARE1);
-	//r.md->std_texture2d = newText;
-
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
 	AManager amanager{ r, Square, iconProgram, Bezier};
+
 	while (true)
 	{
 		evLoopStart = clock();
