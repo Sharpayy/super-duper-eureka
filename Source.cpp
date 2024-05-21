@@ -1,20 +1,24 @@
 #include "AManager.h"
-#include "Models.h"
-#include "Objects.h"
-#include "Camera.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
 
-vec2 GetDir(float a)
+typedef struct _RenderableMapSettings
 {
-	return vec2(cos(a), sin(a));
-}
+	float MoveX;
+	float MoveY;
+	float ScaleX;
+	float ScaleY;
+
+	mat4 CameraMatrix;
+	mat4 ScaleMatrix;
+	uint32_t NeedUpdate;
+
+} RenderableMapSettings;
 
 // settings
 
-uint32_t BaseIconScale = 10.0f;
-float CurrIconScale = 1.0f;
+float BaseIconScale = 10.0f;
 mat4 BaseIconScaleMatrix = scale(mat4(1.0f), vec3(BaseIconScale));
 
 float scale_factor = 1.2f;
@@ -26,13 +30,112 @@ float move_factor = 20.0f;
 uint32_t ScreenWidth = 800;
 uint32_t ScreenHeigth = 800;
 
-#define RENDER_MODEL_SQUARE1 7
-
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
 
-bool keysPressed[SDL_NUM_SCANCODES] = { false };
-bool wasPressed[SDL_NUM_SCANCODES] = { false };
+class Camera
+{
+public:
+	Camera(vec3 pos)
+	{
+		yaw = 90.0f; pitch = 0.0f; roll = 0.0f;
+		this->pos = pos;
+
+		f = normalize(vec3(
+			cos(yaw) * cos(pitch),
+			sin(pitch),
+			cos(pitch) * sin(yaw)
+		));
+		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
+		u = normalize(cross(f, r));
+	}
+	mat4 getMatrix()
+	{
+		f = normalize(vec3(
+			cos(yaw) * cos(pitch),
+			sin(pitch),
+			cos(pitch) * sin(yaw)
+		));
+
+		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
+
+		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
+		u = mat3(roll_mat) * normalize(cross(f, r));
+		mat4 M = lookAt(pos, f + pos, u);
+		return M;
+	}
+	vec3 getPos()
+	{
+		return pos;
+	}
+	vec3* getPPos()
+	{
+		return &pos;
+	}
+	void addYaw(float x)
+	{
+		yaw += x;
+	}
+	void addPitch(float x)
+	{
+		pitch += x;
+	}
+	void addRoll(float x)
+	{
+		roll += x;
+	}
+	void setMatrix(mat4* matrix)
+	{
+		f = normalize(vec3(
+			cos(yaw) * cos(pitch),
+			sin(pitch),
+			cos(pitch) * sin(yaw)
+		));
+
+		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
+
+		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
+		u = mat3(roll_mat) * normalize(cross(f, r));
+
+		*matrix = lookAt(pos, f + pos, u);
+	}
+	void setYaw(float yaw)
+	{
+		this->yaw = yaw;
+	}
+	void setPitch(float pitch)
+	{
+		this->pitch = pitch;
+	}
+	void setRoll(float roll)
+	{
+		this->roll = roll;
+	}
+	vec3 getRight()
+	{
+		return r;
+	}
+	void setPos(vec3 pos)
+	{
+		this->pos = pos;
+	}
+	void addPos(vec3 pos)
+	{
+		this->pos += pos;
+	}
+	void posAddFront(float s)
+	{
+		pos += f * s;
+	}
+	void posAddRight(float s)
+	{
+		pos += r * s;
+	}
+
+	float yaw, pitch, roll;
+	vec3 pos;
+	vec3 r, u, f;
+};
 
 void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 {
@@ -45,13 +148,11 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 		{
 			MapSettings->ScaleX /= scale_factor;
 			MapSettings->ScaleY /= scale_factor;
-			CurrIconScale /= 1.08;
 		}
 		if (e->key.keysym.sym == SDLK_q)
 		{
 			MapSettings->ScaleX *= scale_factor;
 			MapSettings->ScaleY *= scale_factor;
-			CurrIconScale *= 1.08;
 		}
 
 		MapSettings->ScaleMatrix = glm::ortho(-MapSettings->ScaleX, MapSettings->ScaleX, -MapSettings->ScaleY, MapSettings->ScaleY, -1000.0f, 1000.0f);
@@ -65,31 +166,8 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 		if (e->key.keysym.sym == SDLK_a)
 			MapSettings->MoveX -= move_factor;
 
-		if (e->key.keysym.sym = SDL_KEYDOWN) {
-			keysPressed[e->key.keysym.scancode] = true;
-		}
-		if (e->key.keysym.sym = SDL_KEYUP) {
-			keysPressed[e->key.keysym.scancode] = false;
-		}
-
 		MapSettings->CameraMatrix = lookAt(vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f), vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 		MapSettings->NeedUpdate = 1;
-	}
-	if (e->type == SDL_MOUSEBUTTONDOWN) {
-		if (e->button.button == SDL_BUTTON_LEFT) {
-			keysPressed[SDL_SCANCODE_LEFT] = true;
-		}
-		else if (e->button.button == SDL_BUTTON_RIGHT) {
-			keysPressed[SDL_SCANCODE_RIGHT] = true;
-		}
-	}
-	if (e->type == SDL_MOUSEBUTTONUP) {
-		if (e->button.button == SDL_BUTTON_LEFT) {
-			keysPressed[SDL_SCANCODE_LEFT] = false;
-		}
-		else if (e->button.button == SDL_BUTTON_RIGHT) {
-			keysPressed[SDL_SCANCODE_RIGHT] = false;
-		}
 	}
 }
 
@@ -111,19 +189,7 @@ int main(int argc, char** argv)
 	const char* srcShaderIconVertex = GetFileData((char*)"ShaderVertexIcon.glsl")->c_str();
 	const char* srcShaderIconFragment = GetFileData((char*)"ShaderFragmentIcon.glsl")->c_str();
 
-	const char* srcShaderBezierVtx = GetFileData((char*)"vtx_shader_bezier.glsl")->c_str();
-	const char* srcShaderBezierTcs = GetFileData((char*)"tcs_shader_bezier.glsl")->c_str();
-	const char* srcShaderBezierTes = GetFileData((char*)"tes_shader_bezier.glsl")->c_str();
-	const char* srcShaderBezierFrg = GetFileData((char*)"frg_shader_bezier.glsl")->c_str();
-
-	const char* srcPerlinShaderCom = GetFileData((char*)"PerlinGenerator.glsl")->c_str();
-
-	Shader<GL_VERTEX_SHADER>				 shdrBezVtx = Shader<GL_VERTEX_SHADER>(srcShaderBezierVtx);
-	Shader<GL_TESS_CONTROL_SHADER>			 shdrBezTcs = Shader<GL_TESS_CONTROL_SHADER>(srcShaderBezierTcs);
-	Shader<GL_TESS_EVALUATION_SHADER>		 shdrBezTes = Shader<GL_TESS_EVALUATION_SHADER>(srcShaderBezierTes);
-	Shader<GL_FRAGMENT_SHADER>				 shdrBezFrg = Shader<GL_FRAGMENT_SHADER>(srcShaderBezierFrg);
-
-	Shader<GL_VERTEX_SHADER>   shdrVertex = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
+	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
 	Shader<GL_COMPUTE_SHADER>  shdrCompute = Shader<GL_COMPUTE_SHADER>(srcShaderCompute);
 	Shader<GL_VERTEX_SHADER>   shdrPstPrVertex = Shader<GL_VERTEX_SHADER>(srcPstPrVertex);
@@ -133,29 +199,11 @@ int main(int argc, char** argv)
 	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgIcon = Shader<GL_FRAGMENT_SHADER>(srcShaderIconFragment);
 	Shader<GL_VERTEX_SHADER>   shdrVertIcon = Shader<GL_VERTEX_SHADER>(srcShaderIconVertex);
-	Shader<GL_COMPUTE_SHADER>  shdrPerlinComp = Shader<GL_COMPUTE_SHADER>(srcPerlinShaderCom);
-
-	Program pp = Program();
-	pp.programAddShader(shdrPerlinComp.id);
-	pp.programCompile();
-
-	shdrPerlinComp.shaderGetDebugInfo(debugInfo, 2048);
-	printf(debugInfo);
-
-	Program BezierProg = Program();
-	BezierProg.programAddShader(shdrBezVtx.id);
-	BezierProg.programAddShader(shdrBezTes.id);
-	BezierProg.programAddShader(shdrBezTcs.id);
-	BezierProg.programAddShader(shdrBezFrg.id);
-	BezierProg.programCompile();
 
 	Program iconProgram = Program();
 	iconProgram.programAddShader(shdrFrgIcon.id);
 	iconProgram.programAddShader(shdrVertIcon.id);
 	iconProgram.programCompile();
-
-	iconProgram.programGetDebugInfo(debugInfo, 2048);
-	printf(debugInfo);
 
 	Program simpleProgram = Program();
 	simpleProgram.programAddShader(shdrFrgOneColor.id);
@@ -196,37 +244,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	BindSampler("image0", 0, iconProgram.id);
 	uint32_t ulIconScale = glGetUniformLocation(iconProgram.id, "uIconScale");
-	uint32_t ulSelectedModel = glGetUniformLocation(iconProgram.id, "SelectedModelId");
 	glUniform1f(ulIconScale, BaseIconScale);
-	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
-
-#define map_gen_size_x 10000
-#define map_gen_size_y 10000
-
-	Texture2D write_texture = Texture2D(NULL, map_gen_size_x, map_gen_size_y, GL_RGBA, GL_RGBA8);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	UniformBufferObject perlin_gen_data = UniformBufferObject();
-	float perlin_gen_values[10];
-
-	perlin_gen_values[0] = 1.0f;
-	perlin_gen_values[1] = 2.0f;
-	perlin_gen_values[9] = 10.0f;
-
-	perlin_gen_data.data(sizeof(float) * 10, perlin_gen_values, GL_STATIC_DRAW);
-
-	glUseProgram(pp.id);
-
-	perlin_gen_data.bindBase(1);
-	glBindImageTexture(2, write_texture.id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
-	auto f = glGetError();
-
-
-	glDispatchCompute(map_gen_size_x / 10, map_gen_size_y / 10, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
@@ -263,10 +281,11 @@ int main(int argc, char** argv)
 	ppcpy_planeVB.enableAttrib(0);
 	ppcpy_planeVB.enableAttrib(1);
 
-	glViewport(0, 0, ScreenWidth, ScreenHeigth);
+	
 
 	RenderGL r = RenderGL(100);
 	r.setCameraMatrix(glm::mat4(1.0f));
+	//r.setProjectionMatrix(glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f));
 	r.setProjectionMatrix(glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f));
 	r.UpdateShaderData();
 
@@ -295,13 +314,13 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, write_texture, 200010);
+	//r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 50);
 	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
 	MapSetting.MoveY = 0.0f;
-	MapSetting.ScaleX = ScreenWidth / 2.0f;
+	MapSetting.ScaleX = ScreenWidth  / 2.0f;
 	MapSetting.ScaleY = ScreenHeigth / 2.0f;
 	MapSetting.CameraMatrix = lookAt(vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f), vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 	MapSetting.ScaleMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f);
@@ -310,15 +329,20 @@ int main(int argc, char** argv)
 	r.setCameraMatrix(MapSetting.CameraMatrix);
 	r.UpdateShaderDataCamera();
 
-	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
-	Camera camera = { &MapSetting, ScreenWidth, ScreenHeigth };
 
+
+	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
+	
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(25000.0f, 25000.0f, 0.0f)));
-	BezierRenderer Bezier = BezierRenderer(BezierProg, 200, 32.0f);
-	//Bezier.UpdateData(p, 4, 0);
+	//uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(300.0f, 35.0f, 0.05f)) * BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(-114.0f, 27.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(56.0f, 11.0f, 0.05f))* BaseIconScaleMatrix);
+	//r.newObject(RENDER_MODEL_HELICOPTER, translate(mat4(1.0f), vec3(231.0f, -65.0f, 0.05f))* BaseIconScaleMatrix);
+
+	
 
 	glm::mat4 mt = glm::mat4(1.0f);
 
@@ -327,7 +351,6 @@ int main(int argc, char** argv)
 	clock_t evLoopTimeTarget = 1000;
 
 	glEnable(GL_DEPTH_TEST);
-	glLineWidth(2.0f);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
@@ -336,26 +359,70 @@ int main(int argc, char** argv)
 	LoopElapsedTime.Reset();
 	uint32_t lp = 0;
 
+	uint32_t state = 0;
+
+
 	int64_t SumRenderTime = 0;
 
-	iconProgram.use();
-	glUniform1ui(ulSelectedModel, 1);
+	PerlinNoiseGenerator generator;
+	float x1, y1;
+	int w, h, idx;
+	w = 100;
+	h = 100;
+	float s = 0.1f;
 
-	//AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
+	int size = w * h;
+	char* texArr = new char[size];
+	for (y1 = 0; y1 < h; y1++) {
+		for (x1 = 0; x1 < w; x1++) {
+			idx = y1 * w + x1;
+			texArr[idx] = (char)((generator.perlin2DConfigurable(x1 * s, y1 * s, 121143, 1.0f, 8, 2.0f, 0.5f) * 0.5f + 0.5f) * 255.0f);
+		}
+	}	
 
+	
+	AManager amanager{r, Square, iconProgram};
+
+	glFinish();
+	clock_t start = clock();
+	for (int i = 0; i < 10; i++)
+	{
+		r.newObject(RENDER_MODEL_JET, glm::translate(glm::mat4(1.0f), vec3(20.0f * i, 20.0f, 0.5f)));
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
+		r.newObject(RENDER_MODEL_PLANE, glm::translate(glm::mat4(1.0f), vec3(20.0f * i, 0.0f, 0.5f)));
+	}
+
+	glFinish();
+	clock_t create_end = clock();
+
+	r.DisableObject(1);
+	r.DisableObject(5);
+
+	r.deleteObject(5, 5);
+
+	r.UpdateShaderIdSpace(RENDER_MODEL_JET);
+	glFinish();
+	clock_t end = clock();
+
+	printf("create: %d, disable: %d", create_end - start, end - create_end);
+	//exit(0);
 
 	while (true)
 	{
 		evLoopStart = clock();
 		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 
-
-		//RenderElapsedTime.TimeStart();
-		//amanager.onUpdate();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
-		Bezier.Render(0);
-		//RenderElapsedTime.TimeEnd();
+		RenderElapsedTime.TimeStart();
+		/*r.RenderSelectedModel(RENDER_MODEL_SQUARE1);*/
+		amanager.onUpdate();
+		
+		//r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
 		{
@@ -364,11 +431,9 @@ int main(int argc, char** argv)
 			r.setProjectionMatrix(MapSetting.ScaleMatrix);
 			r.UpdateShaderData();
 		}
-
-		win.handleEvents();
-
 		win.swap();
 
+		win.handleEvents();
 
 		lp++;
 		LoopElapsedTime.End();
@@ -379,7 +444,7 @@ int main(int argc, char** argv)
 
 			char NewWinTitle[64];
 			SumRenderTime = SumRenderTime / 1000000;
-
+			
 			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
 
 			SDL_SetWindowTitle(win.win, NewWinTitle);

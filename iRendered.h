@@ -33,7 +33,7 @@ public:
 
 		if (v == 1)
 			return v;
-
+		
 		int wr;
 		glGetShaderInfoLog(id, bf_size, &wr, bf);
 		return v;
@@ -380,23 +380,16 @@ public:
 	void DisableObjectNoSync(RENDER_OBJECT_ID o_id);
 
 	void EnableObjectInternal(RENDER_OBJECT_ID o_id);
-
+	
 	uint32_t MapObjectToSpaceIdx(uint32_t obj);
 	uint32_t GetObjectIdSpaceIdx(uint32_t obj);
-
-	void PreuseModelShader(uint32_t m_id);
-	void MakeModelRef(uint32_t new_m_id, uint32_t ref_m_id);
-	void SetModelShader(Program shdr);
-	void SetModelVertexArray(VertexBuffer vtx, uint32_t vtx_cnt);
-	void SetModelTexture(Texture2D tex);
-	VertexBuffer GetModelVertexArray();
-	uint32_t GetModelObjectCapacity();
+	bool IsObjectActiveAlt(RENDER_OBJECT_ID o_id);
 
 	void UpdateShaderIdSpace(uint32_t m_id);
 
 	void DisableObjectL(uint64_t longId);
 	void EnableObjectL(uint64_t longId);
-
+	
 
 	DoubleInt32 GetFreeIdSpaceIndex(uint32_t m_id);
 
