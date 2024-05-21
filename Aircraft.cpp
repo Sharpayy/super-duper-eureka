@@ -1,11 +1,10 @@
-#include "Aircraft.h"
+﻿#include "Aircraft.h"
 
 float AirCraft::CalcAngle()
 {
 	glm::vec2 b = path.getBezierPosition(path.GetCurrentSection(), 0.0f, false);
 	glm::vec2 a = path.getBezierPosition(path.GetCurrentSection(), 0.00001f, false);
 	glm::vec2 angle = normalize(b - a);
-	//printf("%f %f\n", angle.x, angle.y);
 	return atan2f(angle.y, angle.x);
 }
 
@@ -137,6 +136,34 @@ void FlyPath::AddPoint(glm::vec2 p)
 	path.at(path.size() - 1).end_pos = p;
 	path.push_back(FlyPathPoint(p, destination));
 	UpdatePath();
+	//ValidateAngles(path.size() - 2);
+}
+
+void FlyPath::ValidateAngles(uint32_t idx)
+{
+	if (idx == path.size())
+		return;
+
+	FlyPathPoint p0 = path.at(idx);
+	FlyPathPoint p1 = path.at(idx+1);
+
+	float len = 80.0f;
+	float a = glm::dot(normalize(p0.str_pos), normalize(p1.end_pos));
+
+	float bad_angle = cos(glm::radians(55.0f));
+
+	glm::vec2 add_pos0 = normalize(p0.mid1_pos) * len;
+	glm::vec2 add_pos1 = normalize(p1.mid0_pos) * len;
+
+	path.push_back(FlyPathPoint(add_pos1, destination));
+	(&(path.at(idx)))->end_pos = add_pos0;
+	(&(path.at(idx + 1)))->str_pos = add_pos0;
+	(&(path.at(idx + 1)))->end_pos = add_pos1;
+
+	UpdatePath();
+
+	// duże dodatnie = zle
+	printf("%f\n", a);
 }
 
 void FlyPath::UpdatePath()
@@ -144,7 +171,7 @@ void FlyPath::UpdatePath()
 	FlyPathPoint* fpp;
 	FlyPathPoint* nfpp;
 
-	float len = 100.0f;
+	float len = 120.0f;
 
 	for (uint32_t i = 0; i != path.size(); i++)
 	{
