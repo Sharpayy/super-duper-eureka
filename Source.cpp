@@ -147,6 +147,9 @@ public:
 	vec3 r, u, f;
 };
 
+bool keysPressed[SDL_NUM_SCANCODES] = { false };
+bool wasPressed[SDL_NUM_SCANCODES] = { false };
+
 void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 {
 	if (e->type == SDL_QUIT)
@@ -178,8 +181,31 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 		if (e->key.keysym.sym == SDLK_a)
 			MapSettings->MoveX -= move_factor;
 
+		if (e->key.keysym.sym = SDL_KEYDOWN) {
+			keysPressed[e->key.keysym.scancode] = true;
+		}
+		if (e->key.keysym.sym = SDL_KEYUP) {
+			keysPressed[e->key.keysym.scancode] = false;
+		}
+
 		MapSettings->CameraMatrix = lookAt(vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f), vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 		MapSettings->NeedUpdate = 1;
+	}
+	if (e->type == SDL_MOUSEBUTTONDOWN) {
+		if (e->button.button == SDL_BUTTON_LEFT) {
+			keysPressed[SDL_SCANCODE_LEFT] = true;
+		}
+		else if (e->button.button == SDL_BUTTON_RIGHT) {
+			keysPressed[SDL_SCANCODE_RIGHT] = true;
+		}
+	}
+	if (e->type == SDL_MOUSEBUTTONUP) {
+		if (e->button.button == SDL_BUTTON_LEFT) {
+			keysPressed[SDL_SCANCODE_LEFT] = false;
+		}
+		else if (e->button.button == SDL_BUTTON_RIGHT) {
+			keysPressed[SDL_SCANCODE_RIGHT] = false;
+		}
 	}
 }
 
@@ -417,7 +443,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ r, Square, iconProgram, Bezier};
+	AManager amanager { r, Square, iconProgram, &Bezier};
 
 	while (true)
 	{

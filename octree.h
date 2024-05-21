@@ -118,7 +118,7 @@ public:
     bool _collide(T* data, float w, float h) {
         Node* n = nullptr;
         Node* base = nullptr;
-        _finNodeRec(root, data, n, base);
+        _findNodeRec(root, data, n, base);
         if (n) {
             RectQT ob1;
             PointQT* p = n->p;
@@ -126,6 +126,12 @@ public:
             return _collideRec(base, ob1, n);
         }
         return false;
+    }
+
+    bool _collidePoint(PointQT& p, float w, float h, T*& data) {
+        RectQT ob1;
+        ob1 = RectQT{ PointQT{p.x - w / 2.0f, p.y - h / 2.0f }, w, h };
+        return _collideRec(root, ob1, root, data);
     }
 
     bool _collidePoint(PointQT& p, float w, float h) {
@@ -145,7 +151,7 @@ public:
     std::vector<T*> _rebuild(T* data) {
         Node* n = nullptr;
         Node* b = nullptr;
-        _finNodeRec(root, data, n, b);
+        _findNodeRec(root, data, n, b);
         return _rebuildRec(n);
     }
 
@@ -196,12 +202,16 @@ private:
         rect.height /= 2.0f;
     }
 
-    void _finNodeRec(Node* n, T* data, Node*& finallNode, Node*& base) {
-        if (n) {
+    void _findNodeRec(Node* n, T* data, Node*& finallNode, Node*& base) {
+        if (finallNode) return;
+        else if (n->data || n == root) {
             if (!base) base = n;
-            if (data == n->data) finallNode = n;
+            if (data == n->data) {
+                finallNode = n;
+                return;
+            }
             for (int i = 0; i < 4; i++) {
-                _finNodeRec(n->nodes[i], data, finallNode, base);
+                _findNodeRec(n->nodes[i], data, finallNode, base);
             }
         }
     }
@@ -248,6 +258,24 @@ private:
             }
             n->~Node();
         }
+    }
+
+    bool _collideRec(Node* n, const RectQT& ob1, Node* ignore, T*& data) {
+        if (n->data || n == root) {
+            if (n != ignore && n->p) {
+                RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
+                if (ob1.intersect(ob2)) {
+                    data = n->data;
+                    return true;
+                }
+            }
+            for (int i = 0; i < 4; i++) {
+                if (_collideRec(n->nodes[i], ob1, ignore, data)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     bool _collideRec(Node* n, const RectQT& ob1, Node* ignore) {

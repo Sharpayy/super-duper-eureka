@@ -7,6 +7,8 @@
 #endif
 
 extern glm::mat4 BaseIconScaleMatrix;
+extern bool keysPressed[SDL_NUM_SCANCODES];
+extern bool wasPressed[SDL_NUM_SCANCODES];
 
 SDL_Point mousePos;
 
@@ -14,7 +16,7 @@ class AManager {
 public:
 	std::vector<AirCraft*> AirCraftVec;
 	AManager() = default;
-	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program, BezierRenderer& br) {
+	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program, BezierRenderer* br) {
 		this->r = r;
 		this->vertexBuff = vertexBuff;
 		this->program = program;
@@ -56,21 +58,21 @@ public:
 
 
 		qtAp._alloc(2);
-		generateStaticObjects(800, 800);
+		generateStaticObjects(600, 600);
 
 		qtAc._alloc(8);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 1; i++) {
-			ac = generateRandomAirCraft(2, 800, 800);
+		for (int i = 0; i < 500; i++) {
+			ac = generateRandomAirCraft(i % 4 + 1, 600, 600);
 			ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
 
 		//86�400
-		timeScale = 1.0f / 3600.0f;
+		/*timeScale = 1.0f / 3600.0f;*/
 	}
 
 	void onUpdate() {
@@ -83,18 +85,22 @@ public:
 		r.RenderSelectedModel(RENDER_MODEL_TOWER);
 
 		SDL_GetMouseState(&mousePos.x, &mousePos.y);
-		if (qtAc._collidePoint(PointQT{ mousePos.x - 400, -1 * (mousePos.y - 400) }, 10, 10)) {
-			//std::cout << "Collision" << "\n";
+
+		AirCraft* pca = nullptr;
+		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
+			//FOR PERFORMANCE
+			if (qtAc._collidePoint(PointQT{ mousePos.x - 400, -1 * (mousePos.y - 400) }, 10, 10, pca)) {
+				std::cout << "Collision" << "\n";
+				br->UpdateData((BezierCurveParameters*)(pca->path.getData()), pca->path.path.size(), pca->path.path.size());
+			}
 		}
-		else {
-			//std::cout << mousePos.x - 400 << "|" <<  -1 * (mousePos.y - 400) << "\n";
-		}
+
 		
-		int i = 0;
-		for (auto& ac : AirCraftVec) {
-			br.UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
-			i += ac->path.path.size();
-		}
+		//int i = 0;
+		//for (auto& ac : AirCraftVec) {
+		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
+		//	i += ac->path.path.size();
+		//}
 
 		handleAirCraftLogic();
 
@@ -163,14 +169,14 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		texture.genMipmap();
-		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 500);
+		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 5000);
 	}
 
 	void generateStaticObjects(int mapWidth, int mapHeight) {
 		int i;
 		StaticObj* st;
 		glm::fvec2 position;
-		for (i = 0; i < 100; i++) {
+		for (i = 0; i < 200; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
@@ -196,23 +202,39 @@ private:
 		}
 	}
 
-	void handleAirCraftsMovement(AirCraft*& ac, float t) {
-		ac->SetAngle(ac->CalcAngle());
+	void handleAirCraftsMovement(AirCraft*& ac, float t, float z) {
+		//float angle = (ac->getType() != RENDER_MODEL_BALLON) ? (ac->CalcAngle() + 1.57079632679) : 0;
+		float angle = 0;
+		if (ac->getType() != RENDER_MODEL_BALLON) {
+			ac->SetAngle(ac->CalcAngle());
+			angle = ac->angle + 1.57079632679;
+		}
 		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
 		r.BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f}) * glm::rotate(glm::mat4(1.0f), ac->angle + 1.5707963267948966f, glm::vec3(0, 0, 1)), true);
+		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f + z}) * glm::rotate(glm::mat4(1.0f), angle , glm::vec3(0, 0, 1)), true);
+	}
+
+	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
+		if (qtAc._collide(ac, w, h)) {
+			//std::cout << "Collision\n";
+		}
 	}
 
 	void handleAirCraftLogic() {
 		float t = 0.0f;
 
 		std::vector<AirCraft*> AirCraftsToRemove;
+		float z = 0.0003f;
 		for (AirCraft* ac : AirCraftVec) {
-			t = 0.00003f;
-			handleAirCraftsMovement(ac, t);
+			t = 0.0001f;
+
+			handleAirCraftCollision(ac, 40, 40);
+			handleAirCraftsMovement(ac, t, z);
 			if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
 				AirCraftsToRemove.push_back(ac);
 			}
+
+			z += 0.01f;
 		}
 		for (AirCraft* ac : AirCraftsToRemove) {
 			r.DisableObjectL(ac->LongId);
@@ -232,14 +254,27 @@ private:
 
 		//airCraft->angle;
 	}
+
+	bool keyPressedOnce(SDL_Scancode key) {
+		if (keysPressed[key]) {
+			if (wasPressed[key] == true) return false;
+			wasPressed[key] = true;
+			return true;
+		}
+		else {
+			wasPressed[key] = false;
+		}
+		return false;
+	}
+
 private:
-	QT<AirCraft> qtAc = { 2000, 2000 };
+	QT<AirCraft> qtAc = { 1000, 1000 };
 
 	std::vector<StaticObj*> AirPortsVec;
-	QT<StaticObj> qtAp = { 2000, 2000 };
+	QT<StaticObj> qtAp = { 1000, 1000 };
 
 	std::vector<StaticObj*> TowersVec;
-	QT<StaticObj> qtT = { 2000, 2000 };
+	QT<StaticObj> qtT = { 1000, 1000 };
 
 
 	int aircraftAmount = 0;
@@ -248,7 +283,8 @@ private:
 	VertexBuffer vertexBuff;
 	Program program;
 
-	BezierRenderer br;
+	BezierRenderer* br;
 
-	float timeScale;
+	//FOR NOW
+
 };
