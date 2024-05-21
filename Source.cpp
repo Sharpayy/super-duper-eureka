@@ -10,6 +10,23 @@ vec2 GetDir(float a)
 	return vec2(cos(a), sin(a));
 }
 
+void AddCollisionBuffer(VertexBuffer vao, uint32_t div, uint32_t amount, uint32_t* id)
+{
+	uint32_t cb;
+	glGenBuffers(1, &cb);
+
+	vao.bind();
+	glBindBuffer(GL_ARRAY_BUFFER, cb);
+	glBufferData(GL_ARRAY_BUFFER, amount * 4, NULL, GL_DYNAMIC_DRAW);
+
+	vao.addAttrib(GL_FLOAT, 2, 1, 4, 0);
+	vao.enableAttrib(2);
+
+	glVertexAttribDivisor(2, 1);
+	glBindVertexArray(0);
+	*id = cb;
+}
+
 typedef struct _RenderableMapSettings
 {
 	float MoveX;
@@ -368,15 +385,6 @@ int main(int argc, char** argv)
 
 
 	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
-
-	FlyPath fp = FlyPath(vec2(0.0f, 0.0f), vec2(300.0f, 300.0f));
-	fp.AddPoint(vec2(50.0f, 210.0f));
-	fp.AddPoint(vec2(-210.0f, 380.0f));
-
-	BezierCurveParameters p[4];
-	fp.FetchRenderInfo((BezierCurveParametersA*)p, 32);
-
-	uint32_t br = 3;
 	BezierRenderer Bezier = BezierRenderer(BezierProg, 200, 32.0f);
 	//Bezier.UpdateData(p, 4, 0);
 
@@ -418,6 +426,16 @@ int main(int argc, char** argv)
 	glUniform1ui(ulSelectedModel, 1);
 
 	AManager amanager{ r, Square, iconProgram, Bezier};
+
+	r.BindActiveModel(RENDER_MODEL_BALLON);
+	VertexBuffer cvao = r.GetModelVertexArray();
+
+	float data = 1.0f;
+	uint32_t bid;
+	AddCollisionBuffer(cvao, 0, r.GetModelObjectCapacity(), &bid);
+	glBindBuffer(GL_ARRAY_BUFFER, bid);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, 4, &data);
+	//glBufferSubData(GL_ARRAY_BUFFER, 4, 4, &data);
 
 	while (true)
 	{

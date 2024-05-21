@@ -62,9 +62,9 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 300; i++) {
 			ac = generateRandomAirCraft(2, 800, 800);
-			ac->path.AddPoint(vec2(0.0f));
+			//ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
