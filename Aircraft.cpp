@@ -136,34 +136,40 @@ void FlyPath::AddPoint(glm::vec2 p)
 	path.at(path.size() - 1).end_pos = p;
 	path.push_back(FlyPathPoint(p, destination));
 	UpdatePath();
-	//ValidateAngles(path.size() - 2);
+	ValidateAnglesNew();
 }
 
 void FlyPath::ValidateAngles(uint32_t idx)
 {
-	if (idx == path.size())
-		return;
+	__debugbreak();
+}
 
-	FlyPathPoint p0 = path.at(idx);
-	FlyPathPoint p1 = path.at(idx+1);
+void FlyPath::ValidateAnglesNew()
+{
+	uint32_t Last = path.size() - 1;
+	uint32_t PreLast = path.size() - 2;
 
-	float len = 80.0f;
-	float a = glm::dot(normalize(p0.str_pos), normalize(p1.end_pos));
+	FlyPathPoint p0 = path.at(Last);
+	FlyPathPoint p1 = path.at(PreLast);
+
+	float len = 30.0f;
+	float a = glm::dot(normalize(p0.end_pos), normalize(p1.str_pos));
 
 	float bad_angle = cos(glm::radians(55.0f));
 
-	glm::vec2 add_pos0 = normalize(p0.mid1_pos) * len;
-	glm::vec2 add_pos1 = normalize(p1.mid0_pos) * len;
+	if (a < bad_angle)
+		return;
 
+	glm::vec2 add_pos1 = normalize(p0.mid1_pos) * len;
+	glm::vec2 add_pos0 = normalize(p1.mid0_pos) * len;
+	//glm::vec2 add_pos0 = p1.str_pos;
+
+	path.at(PreLast).end_pos = add_pos0;
+	path.at(Last).end_pos = add_pos1;
+	path.at(Last).str_pos = add_pos0;
 	path.push_back(FlyPathPoint(add_pos1, destination));
-	(&(path.at(idx)))->end_pos = add_pos0;
-	(&(path.at(idx + 1)))->str_pos = add_pos0;
-	(&(path.at(idx + 1)))->end_pos = add_pos1;
 
 	UpdatePath();
-
-	// duże dodatnie = zle
-	printf("%f\n", a);
 }
 
 void FlyPath::UpdatePath()

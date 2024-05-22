@@ -87,7 +87,7 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 1; i++) {
 			ac = generateRandomAirCraft(i % 4 + 1, 600, 600);
 			ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
@@ -252,6 +252,7 @@ private:
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
 		AirCraft* acr = nullptr;
 		// ultra slow shit
+		r.BindActiveModel(LONG_GET_MODEL(ac->LongId));
 		if (qtAc._collide(ac, w, h))
 			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 1.0f, r.MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 		else

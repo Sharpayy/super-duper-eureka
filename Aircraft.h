@@ -41,6 +41,7 @@ public:
 	void ChangeDestinatination(glm::vec2 dest);
 	void AddPoint(glm::vec2 p);
 	void ValidateAngles(uint32_t idx);
+	void ValidateAnglesNew();
 
 	BezierCurveParametersA* getData();
 	BezierCurveParametersA* GetCurrentSection();
