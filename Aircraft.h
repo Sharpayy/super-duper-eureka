@@ -41,6 +41,8 @@ public:
 	void ChangeDestinatination(glm::vec2 dest);
 	void AddPoint(glm::vec2 p);
 	void ValidateAngles(uint32_t idx);
+	void ValidateAnglesNew();
+	void UpdateAngles(uint32_t idx);
 
 	BezierCurveParametersA* getData();
 	BezierCurveParametersA* GetCurrentSection();
@@ -50,7 +52,7 @@ public:
 
 private:
 	float t;
-	void UpdatePath();
+	void UpdatePath(float len = 120.0f);
 };
 
 #define RENDER_MODEL_BALLON 1

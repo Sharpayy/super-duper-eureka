@@ -136,42 +136,101 @@ void FlyPath::AddPoint(glm::vec2 p)
 	path.at(path.size() - 1).end_pos = p;
 	path.push_back(FlyPathPoint(p, destination));
 	UpdatePath();
-	//ValidateAngles(path.size() - 2);
+	ValidateAnglesNew();
+}
+
+float Ang(glm::vec2 a, glm::vec2 b)
+{
+	return atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
 }
 
 void FlyPath::ValidateAngles(uint32_t idx)
 {
-	if (idx == path.size())
+	uint32_t Last = idx - 1;
+	uint32_t PreLast = idx - 2;
+
+	FlyPathPoint p1 = path.at(Last);
+	FlyPathPoint p0 = path.at(PreLast);
+
+	float len = 40.0f;
+	float a = glm::degrees(Ang(glm::normalize(p0.end_pos - p0.str_pos), glm::normalize(p0.end_pos - p1.end_pos)));
+
+	float bad_angle = 60.0f;
+
+	printf("cos: %f\n", a);
+	if (abs(a) > bad_angle)
 		return;
 
-	FlyPathPoint p0 = path.at(idx);
-	FlyPathPoint p1 = path.at(idx+1);
+	printf("Correction!\n");
+	float a_ = (p1.end_pos.y - p1.str_pos.y) / (p1.end_pos.x - p1.str_pos.x);
+	float b_ = -(a_ * p1.str_pos.x) - p1.str_pos.y;
 
-	float len = 80.0f;
-	float a = glm::dot(normalize(p0.str_pos), normalize(p1.end_pos));
+	glm::vec2 sp = glm::vec2((p1.end_pos.x + p1.str_pos.x) / 2.0f, (p1.end_pos.y + p1.str_pos.y) / 2.0f);
 
-	float bad_angle = cos(glm::radians(55.0f));
+	float a1 = -1.0f / a_;
+	float b1 = -(a1 * sp.x) - sp.y;
 
-	glm::vec2 add_pos0 = normalize(p0.mid1_pos) * len;
-	glm::vec2 add_pos1 = normalize(p1.mid0_pos) * len;
+	glm::vec2 pl = glm::normalize(p1.str_pos);
 
-	path.push_back(FlyPathPoint(add_pos1, destination));
-	(&(path.at(idx)))->end_pos = add_pos0;
-	(&(path.at(idx + 1)))->str_pos = add_pos0;
-	(&(path.at(idx + 1)))->end_pos = add_pos1;
+	float side = 1.0f;
+	float l = 50.0f;
 
-	UpdatePath();
+	glm::vec2 dir1 = normalize(glm::vec2(1.0f, a1) * side);
+	glm::vec2 p = dir1 * len;
+	path.at(idx - 1).end_pos = p + sp;
+	path.push_back(FlyPathPoint(p + sp, destination));
 
-	// duże dodatnie = zle
-	printf("%f\n", a);
+	UpdatePath(l);
 }
 
-void FlyPath::UpdatePath()
+void FlyPath::ValidateAnglesNew()
+{
+	uint32_t Last = path.size() - 1;
+	uint32_t PreLast = path.size() - 2;
+
+	FlyPathPoint p1 = path.at(Last);
+	FlyPathPoint p0 = path.at(PreLast);
+
+	float len = 40.0f;
+	float a = glm::degrees(Ang(glm::normalize(p0.end_pos - p0.str_pos), glm::normalize(p0.end_pos - p1.end_pos)));
+
+	float bad_angle = 60.0f;
+
+	printf("cos: %f\n", a);
+	if (abs(a) > bad_angle)
+		return;
+
+	printf("Correction!\n");
+	float a_ = (p1.end_pos.y - p1.str_pos.y) / (p1.end_pos.x - p1.str_pos.x);
+	float b_ = -(a_ * p1.str_pos.x) - p1.str_pos.y;
+
+	glm::vec2 sp = glm::vec2((p1.end_pos.x + p1.str_pos.x) / 2.0f, (p1.end_pos.y + p1.str_pos.y) / 2.0f);
+
+	float a1 = -1.0f / a_;
+	float b1 = -(a1 * sp.x) - sp.y;
+
+	glm::vec2 pl = glm::normalize(p1.str_pos);
+
+	//float side = -1.0f + (2.0f * (pl.x < 0.0f && pl.y < 0.0f));
+	float side = 1.0f;
+	float l = 80.0f;
+
+	glm::vec2 dir1 = normalize(glm::vec2(1.0f, a1) * side);
+	glm::vec2 p = dir1 * len;
+	path.at(path.size() - 1).end_pos = p + sp;
+	path.push_back(FlyPathPoint(p + sp, destination));
+
+	UpdatePath(l);
+}
+
+void FlyPath::UpdateAngles(uint32_t idx)
+{
+}
+
+void FlyPath::UpdatePath(float len)
 {
 	FlyPathPoint* fpp;
 	FlyPathPoint* nfpp;
-
-	float len = 120.0f;
 
 	for (uint32_t i = 0; i != path.size(); i++)
 	{
@@ -194,3 +253,30 @@ void FlyPath::UpdatePath()
 	path.at(path.size() - 1).mid1_pos = path.at(path.size() - 1).end_pos;
 
 }
+
+/*
+	uint32_t Last = path.size() - 1;
+	uint32_t PreLast = path.size() - 2;
+
+	FlyPathPoint p0 = path.at(Last);
+	FlyPathPoint p1 = path.at(PreLast);
+
+	float len = 10.0f;
+	float a = glm::dot(normalize(p0.end_pos), normalize(p1.str_pos));
+
+	float bad_angle = cos(glm::radians(55.0f));
+
+	if (a < bad_angle)
+		return;
+
+	glm::vec2 add_pos1 = normalize(p0.mid1_pos) * len;
+	glm::vec2 add_pos0 = normalize(p1.mid0_pos) * len;
+	//glm::vec2 add_pos0 = p1.str_pos;
+
+	path.at(PreLast).end_pos = add_pos0;
+	path.at(Last).end_pos = add_pos1;
+	path.at(Last).str_pos = add_pos0;
+	path.push_back(FlyPathPoint(add_pos1, destination));
+
+	UpdatePath();
+*/
