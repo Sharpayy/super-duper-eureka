@@ -42,6 +42,7 @@ public:
 		this->ebo = ebo;
 		this->program = program;
 		this->br = br;
+		pathRenderCount = 0;
 
 		cd = CollisionDrawer(15, 1000);
 
@@ -89,7 +90,7 @@ public:
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
 		for (int i = 0; i < 1; i++) {
 			ac = generateRandomAirCraft(i % 4 + 1, 600, 600);
-			ac->path.AddPoint(vec2(0.0f));
+			ac->path.AddPoint(vec2(120.0f, -140.0f));
 			AirCraftVec.push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -114,7 +115,8 @@ public:
 			//FOR PERFORMANCE
 			if (qtAc._collidePoint(PointQT{ mousePos.x - 400, -1 * (mousePos.y - 400) }, 10, 10, pca)) {
 				std::cout << "Collision" << "\n";
-				br->UpdateData((BezierCurveParameters*)(pca->path.getData()), pca->path.path.size(), pca->path.path.size());
+				br->UpdateData((BezierCurveParameters*)(pca->path.getData()), pca->path.path.size(), 0);
+				pathRenderCount = pca->path.path.size();
 			}
 		}
 
@@ -211,7 +213,7 @@ private:
 		int i;
 		StaticObj* st;
 		glm::fvec2 position;
-		for (i = 0; i < 200; i++) {
+		for (i = 0; i < 20; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
@@ -325,6 +327,7 @@ private:
 
 	BezierRenderer* br;
 	CollisionDrawer cd;
+	uint32_t pathRenderCount;
 
 	//FOR NOW
 

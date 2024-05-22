@@ -436,6 +436,7 @@ int main(int argc, char** argv)
 
 	AManager amanager { r, SquareVBO, iconProgram, &Bezier, SquareEBO};
 
+
 	while (true)
 	{
 		evLoopStart = clock();
@@ -446,7 +447,7 @@ int main(int argc, char** argv)
 		//RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(10);
+		Bezier.Render(0);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
