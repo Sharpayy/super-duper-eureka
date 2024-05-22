@@ -10,23 +10,6 @@ vec2 GetDir(float a)
 	return vec2(cos(a), sin(a));
 }
 
-void AddCollisionBuffer(VertexBuffer vao, uint32_t div, uint32_t amount, uint32_t* id)
-{
-	uint32_t cb;
-	glGenBuffers(1, &cb);
-
-	vao.bind();
-	glBindBuffer(GL_ARRAY_BUFFER, cb);
-	glBufferData(GL_ARRAY_BUFFER, amount * 4, NULL, GL_DYNAMIC_DRAW);
-
-	vao.addAttrib(GL_FLOAT, 2, 1, 4, 0);
-	vao.enableAttrib(2);
-
-	glVertexAttribDivisor(2, 1);
-	glBindVertexArray(0);
-	*id = cb;
-}
-
 typedef struct _RenderableMapSettings
 {
 	float MoveX;
@@ -451,17 +434,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager { r, Square, iconProgram, &Bezier};
-
-	r.BindActiveModel(RENDER_MODEL_BALLON);
-	VertexBuffer cvao = r.GetModelVertexArray();
-
-	float data = 1.0f;
-	uint32_t bid;
-	AddCollisionBuffer(cvao, 0, r.GetModelObjectCapacity(), &bid);
-	glBindBuffer(GL_ARRAY_BUFFER, bid);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 4, &data);
-	//glBufferSubData(GL_ARRAY_BUFFER, 4, 4, &data);
+	AManager amanager { r, SquareVBO, iconProgram, &Bezier, SquareEBO};
 
 	while (true)
 	{
@@ -473,7 +446,7 @@ int main(int argc, char** argv)
 		//RenderElapsedTime.TimeStart();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
-		Bezier.Render(10);
+		Bezier.Render(5);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)

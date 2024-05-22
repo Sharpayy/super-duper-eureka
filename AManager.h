@@ -10,17 +10,40 @@ extern glm::mat4 BaseIconScaleMatrix;
 extern bool keysPressed[SDL_NUM_SCANCODES];
 extern bool wasPressed[SDL_NUM_SCANCODES];
 
-SDL_Point mousePos;
+void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
+
+extern SDL_Point mousePos;
+
+class CollisionDrawer
+{
+public:
+	float* currentArray;
+	Buffer<GL_ARRAY_BUFFER>* buffers;
+	uint32_t* buffersSize;
+	uint32_t bufferCount;
+	uint32_t currentArraySize;
+
+	CollisionDrawer() = default;
+	CollisionDrawer(uint32_t cnt, uint32_t maxObjects);
+	void AddCollisionBuffer(uint32_t type, uint32_t amount, VertexBuffer vao);
+	void FetchCollisionBuffer(uint32_t type);
+	void SendCollisionBuffer(uint32_t type);
+
+	void UpdateSingleData(uint32_t type, float c, uint32_t idx);
+};
 
 class AManager {
 public:
 	std::vector<AirCraft*> AirCraftVec;
 	AManager() = default;
-	AManager(RenderGL& r, VertexBuffer& vertexBuff, Program program, BezierRenderer* br) {
+	AManager(RenderGL& r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo) {
 		this->r = r;
-		this->vertexBuff = vertexBuff;
+		this->vbo = vbo;
+		this->ebo = ebo;
 		this->program = program;
 		this->br = br;
+
+		cd = CollisionDrawer(15, 1000);
 
 		int x, y, c;
 		Texture2D MapTexture;
@@ -64,7 +87,7 @@ public:
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 500; i++) {
+		for (int i = 0; i < 20; i++) {
 			ac = generateRandomAirCraft(i % 4 + 1, 600, 600);
 			ac->path.AddPoint(vec2(0.0f));
 			AirCraftVec.push_back(ac);
@@ -169,7 +192,19 @@ private:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		texture.genMipmap();
-		r.newModel(idModel, vertexBuff, program, 6, GL_TRIANGLES, texture, 5000);
+
+		VertexBuffer vao = VertexBuffer();
+		vao.bind();
+		vbo.bind();
+		ebo.bind();
+
+		vao.addAttrib(GL_FLOAT, 0, 2, sizeof(float) * 4, 0);
+		vao.addAttrib(GL_FLOAT, 1, 2, sizeof(float) * 4, 8);
+		vao.enableAttrib(0);
+		vao.enableAttrib(1);
+
+		cd.AddCollisionBuffer(idModel, 1000, vao);
+		r.newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
 	}
 
 	void generateStaticObjects(int mapWidth, int mapHeight) {
@@ -215,9 +250,12 @@ private:
 	}
 
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
-		if (qtAc._collide(ac, w, h)) {
-			//std::cout << "Collision\n";
-		}
+		AirCraft* acr = nullptr;
+		// ultra slow shit
+		if (qtAc._collide(ac, w, h))
+			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 1.0f, r.MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		else
+			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 0.0f, r.MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 	}
 
 	void handleAirCraftLogic() {
@@ -226,7 +264,7 @@ private:
 		std::vector<AirCraft*> AirCraftsToRemove;
 		float z = 0.0003f;
 		for (AirCraft* ac : AirCraftVec) {
-			t = 0.0001f;
+			t = 0.00001f;
 
 			handleAirCraftCollision(ac, 40, 40);
 			handleAirCraftsMovement(ac, t, z);
@@ -280,10 +318,12 @@ private:
 	int aircraftAmount = 0;
 
 	RenderGL r;
-	VertexBuffer vertexBuff;
+	Buffer<GL_ARRAY_BUFFER> vbo;
+	Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo;
 	Program program;
 
 	BezierRenderer* br;
+	CollisionDrawer cd;
 
 	//FOR NOW
 

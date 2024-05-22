@@ -11,12 +11,12 @@ layout(std140, binding = 1) uniform MVP_DATA
 	mat4 matProjCamera;
 };
 
-layout(std430, binding = 5) restrict buffer OPV 
+layout(std430, binding = 5) restrict readonly buffer OPV 
 {
 	mat4 matModel[];
 };
 
-layout(std430, binding = 6) restrict buffer IDX
+layout(std430, binding = 6) restrict readonly buffer IDX
 {
 	uint modelIdx[];
 };

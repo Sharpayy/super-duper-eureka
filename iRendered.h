@@ -326,6 +326,9 @@ template<typename T> void swap(T* t1, T* t2) {
 typedef uint32_t RENDER_OBJECT_ID;
 typedef uint32_t RENDER_MODEL_ID;
 
+#define LONG_GET_MODEL(A)	(*(RENDER_LONG_ID*)&A).ModelId
+#define LONG_GET_OBJECT(A)	(*(RENDER_LONG_ID*)&A).ObjectId
+
 class RenderGL
 {
 public:
