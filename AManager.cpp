@@ -1,6 +1,6 @@
 #include "AManager.h"
 
-SDL_Point mousePos;
+//SDL_Point mousePos;
 
 CollisionDrawer::CollisionDrawer(uint32_t cnt, uint32_t maxObjects)
 {

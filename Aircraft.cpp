@@ -173,7 +173,7 @@ void FlyPath::ValidateAngles(uint32_t idx)
 	glm::vec2 pl = glm::normalize(p1.str_pos);
 
 	float side = 1.0f;
-	float l = 50.0f;
+	float l = 0.0f;
 
 	glm::vec2 dir1 = normalize(glm::vec2(1.0f, a1) * side);
 	glm::vec2 p = dir1 * len;
@@ -216,8 +216,25 @@ void FlyPath::ValidateAnglesNew()
 	float l = 80.0f;
 
 	glm::vec2 dir1 = normalize(glm::vec2(1.0f, a1) * side);
+	if (GetCurrentSection()->str_pos.x > destination.x) {
+		dir1.x *= 1;
+		sp.x *= 1;
+	}
+	else {
+		dir1.x *= -1;
+		sp.x *= -1;
+	}
+	if (abs(GetCurrentSection()->str_pos.y) > abs(destination.y)) {
+		dir1.y *= 1;
+		sp.y *= -1;
+	}
+	else {
+		dir1.y *= -1;
+		sp.y *= 1;
+	}
 	glm::vec2 p = dir1 * len;
 	path.at(path.size() - 1).end_pos = p + sp;
+
 	path.push_back(FlyPathPoint(p + sp, destination));
 
 	UpdatePath(l);

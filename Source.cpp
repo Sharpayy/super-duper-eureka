@@ -1,6 +1,7 @@
 #include "AManager.h"
 #include "Models.h"
 #include "Objects.h"
+#include "Camera.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
@@ -9,19 +10,6 @@ vec2 GetDir(float a)
 {
 	return vec2(cos(a), sin(a));
 }
-
-typedef struct _RenderableMapSettings
-{
-	float MoveX;
-	float MoveY;
-	float ScaleX;
-	float ScaleY;
-
-	mat4 CameraMatrix;
-	mat4 ScaleMatrix;
-	uint32_t NeedUpdate;
-
-} RenderableMapSettings;
 
 // settings
 
@@ -42,110 +30,6 @@ uint32_t ScreenHeigth = 800;
 
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
-
-class Camera
-{
-public:
-	Camera(vec3 pos)
-	{
-		yaw = 90.0f; pitch = 0.0f; roll = 0.0f;
-		this->pos = pos;
-
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = normalize(cross(f, r));
-	}
-	mat4 getMatrix()
-	{
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-
-		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
-
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = mat3(roll_mat) * normalize(cross(f, r));
-		mat4 M = lookAt(pos, f + pos, u);
-		return M;
-	}
-	vec3 getPos()
-	{
-		return pos;
-	}
-	vec3* getPPos()
-	{
-		return &pos;
-	}
-	void addYaw(float x)
-	{
-		yaw += x;
-	}
-	void addPitch(float x)
-	{
-		pitch += x;
-	}
-	void addRoll(float x)
-	{
-		roll += x;
-	}
-	void setMatrix(mat4* matrix)
-	{
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-
-		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
-
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = mat3(roll_mat) * normalize(cross(f, r));
-
-		*matrix = lookAt(pos, f + pos, u);
-	}
-	void setYaw(float yaw)
-	{
-		this->yaw = yaw;
-	}
-	void setPitch(float pitch)
-	{
-		this->pitch = pitch;
-	}
-	void setRoll(float roll)
-	{
-		this->roll = roll;
-	}
-	vec3 getRight()
-	{
-		return r;
-	}
-	void setPos(vec3 pos)
-	{
-		this->pos = pos;
-	}
-	void addPos(vec3 pos)
-	{
-		this->pos += pos;
-	}
-	void posAddFront(float s)
-	{
-		pos += f * s;
-	}
-	void posAddRight(float s)
-	{
-		pos += r * s;
-	}
-
-	float yaw, pitch, roll;
-	vec3 pos;
-	vec3 r, u, f;
-};
 
 bool keysPressed[SDL_NUM_SCANCODES] = { false };
 bool wasPressed[SDL_NUM_SCANCODES] = { false };
@@ -389,6 +273,7 @@ int main(int argc, char** argv)
 	r.UpdateShaderDataCamera();
 
 	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
+	Camera camera = {&MapSetting, ScreenWidth, ScreenHeigth };
 	
 #define OM(A) r.GetObjectMatrix(A)
 
@@ -434,7 +319,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager { r, SquareVBO, iconProgram, &Bezier, SquareEBO};
+	AManager amanager { r, SquareVBO, iconProgram, &Bezier, SquareEBO, &camera};
 
 
 	while (true)

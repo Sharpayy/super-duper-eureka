@@ -1,6 +1,8 @@
-﻿#include "Bezier.h"
-#include "octree.h"
+﻿#include "octree.h"
 #include "StaticObjects.h"
+#include "Map.h"
+#include "Camera.h"
+#include <unordered_map>
 
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
@@ -12,7 +14,7 @@ extern bool wasPressed[SDL_NUM_SCANCODES];
 
 void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
-extern SDL_Point mousePos;
+//extern SDL_Point mousePos;
 
 class CollisionDrawer
 {
@@ -34,14 +36,15 @@ public:
 
 class AManager {
 public:
-	std::vector<AirCraft*> AirCraftVec;
 	AManager() = default;
-	AManager(RenderGL& r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo) {
+	AManager(RenderGL& r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo, Camera* camera) {
 		this->r = r;
 		this->vbo = vbo;
 		this->ebo = ebo;
 		this->program = program;
 		this->br = br;
+		this->camera = camera;
+
 		pathRenderCount = 0;
 
 		cd = CollisionDrawer(15, 1000);
@@ -82,16 +85,17 @@ public:
 
 
 		qtAp._alloc(2);
-		generateStaticObjects(600, 600);
+		generateStaticObjects(6000, 6000);
 
 		qtAc._alloc(8);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 1; i++) {
-			ac = generateRandomAirCraft(i % 4 + 1, 600, 600);
-			ac->path.AddPoint(vec2(120.0f, -140.0f));
-			AirCraftVec.push_back(ac);
+		for (int i = 0; i < 800; i++) {
+			ac = generateRandomAirCraft(i % 4 + 1, 6000, 6000);
+			//ac->path.AddPoint(vec2(120.0f, -140.0f));
+			ac->path.AddPoint(vec2(0,0));
+			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
 
@@ -108,12 +112,12 @@ public:
 		r.RenderSelectedModel(RENDER_MODEL_AIRPORT);
 		r.RenderSelectedModel(RENDER_MODEL_TOWER);
 
-		SDL_GetMouseState(&mousePos.x, &mousePos.y);
-
 		AirCraft* pca = nullptr;
 		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
 			//FOR PERFORMANCE
-			if (qtAc._collidePoint(PointQT{ mousePos.x - 400, -1 * (mousePos.y - 400) }, 10, 10, pca)) {
+			glm::fvec2 mousePos = camera->getMousePosition();
+			std::cout << mousePos.x << "|" << mousePos.y << "\n";
+			if (qtAc._collidePoint(PointQT{ mousePos.x, mousePos.y }, 20, 20, pca)) {
 				std::cout << "Collision" << "\n";
 				br->UpdateData((BezierCurveParameters*)(pca->path.getData()), pca->path.path.size(), 0);
 				pathRenderCount = pca->path.path.size();
@@ -213,7 +217,7 @@ private:
 		int i;
 		StaticObj* st;
 		glm::fvec2 position;
-		for (i = 0; i < 20; i++) {
+		for (i = 0; i < 250; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
@@ -266,26 +270,33 @@ private:
 
 		std::vector<AirCraft*> AirCraftsToRemove;
 		float z = 0.0003f;
-		for (AirCraft* ac : AirCraftVec) {
-			t = 0.00001f;
+		for (auto planeType : AirCraftMap) {
+			for (AirCraft* ac : planeType.second) {
+				qtAc._push(ac, { ac->position.x, ac->position.y });
+				t = 0.0008f;
 
-			handleAirCraftCollision(ac, 40, 40);
-			handleAirCraftsMovement(ac, t, z);
-			if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
-				AirCraftsToRemove.push_back(ac);
+				handleAirCraftCollision(ac, 40, 40);
+				handleAirCraftsMovement(ac, t, z);
+				if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
+					AirCraftsToRemove.push_back(ac);
+				}
+
+				z += 0.01f;
 			}
-
-			z += 0.01f;
 		}
+
 		for (AirCraft* ac : AirCraftsToRemove) {
 			r.DisableObjectL(ac->LongId);
 			r.deleteObject((*(RENDER_LONG_ID*)&ac->LongId).ModelId, (*(RENDER_LONG_ID*)&ac->LongId).ObjectId);
-			AirCraftVec.erase(std::remove(AirCraftVec.begin(), AirCraftVec.end(), ac), AirCraftVec.end());
+			auto& vec = AirCraftMap[ac->getType()];
+			vec.erase(std::remove(vec.begin(), vec.end(), ac), vec.end());
 		}
 
 		qtAc._clear();
-		for (AirCraft* ac : AirCraftVec) {
-			qtAc._push(ac, { ac->position.x, ac->position.y });
+		for (auto planeType : AirCraftMap) {
+			for (AirCraft* ac : planeType.second) {
+				qtAc._push(ac, { ac->position.x, ac->position.y });
+			}
 		}
 	}
 
@@ -309,13 +320,15 @@ private:
 	}
 
 private:
-	QT<AirCraft> qtAc = { 1000, 1000 };
+	std::unordered_map<uint8_t,std::vector<AirCraft*>> AirCraftMap;
+
+	QT<AirCraft> qtAc = { 10000, 10000 };
 
 	std::vector<StaticObj*> AirPortsVec;
-	QT<StaticObj> qtAp = { 1000, 1000 };
+	QT<StaticObj> qtAp = { 10000, 10000 };
 
 	std::vector<StaticObj*> TowersVec;
-	QT<StaticObj> qtT = { 1000, 1000 };
+	QT<StaticObj> qtT = { 10000, 10000 };
 
 
 	int aircraftAmount = 0;
@@ -325,10 +338,12 @@ private:
 	Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo;
 	Program program;
 
+	Map map;
+	Camera* camera;
+
 	BezierRenderer* br;
 	CollisionDrawer cd;
 	uint32_t pathRenderCount;
 
 	//FOR NOW
-
 };
