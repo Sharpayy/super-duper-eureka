@@ -32,8 +32,7 @@ void main()
 	mat4 mModel = matModel[MdlId];
 	mat4 sModel = mat4(vec4(uIconScale, 0.0, 0.0, 0.0), vec4(0.0, uIconScale, 0.0, 0.0), vec4(0.0, 0.0, uIconScale, 0.0), vec4(0.0, 0.0, 0.0, 1.0));
 
-	gl_Position = matProjCamera * mModel * sModel * vec4(pos, 0.0, 1.0);
-
+    gl_Position = matProjCamera * mModel * sModel * vec4(pos, 0.005 * MdlId, 1.0);
 	uv_o = uv_c;
 	ModelId = MdlId;
 	checko = check;

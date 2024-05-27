@@ -20,7 +20,7 @@ in vec2 uv_o;
 void main()
 {
 	vec4 renderColor = texture(image0, uv_o);
-	
+		
 	if (renderColor.a < 0.5)
 		discard;
 

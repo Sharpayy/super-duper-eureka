@@ -16,6 +16,15 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 //extern SDL_Point mousePos;
 
+#define MAP_WIDTH 10000
+#define MAP_HEIGHT 10000
+#define SCALE 10
+#define MAP_OFFSETX 0
+#define MAP_OFFSETY 0
+#define N_AIRPORTS 500
+#define N_TOWERS 200
+#define N_AIRCRAFTS 500
+
 class CollisionDrawer
 {
 public:
@@ -53,6 +62,19 @@ public:
 		Texture2D MapTexture;
 		uint8_t* MapTextureData;
 
+		map = Map{ MAP_WIDTH / 10, MAP_HEIGHT / 10, 2312423, 4, 8, 0.5f, 0.5f };
+		VertexBuffer vao = VertexBuffer();
+		vao.bind();
+		vbo.bind();
+		ebo.bind();
+
+		vao.addAttrib(GL_FLOAT, 0, 2, sizeof(float) * 4, 0);
+		vao.addAttrib(GL_FLOAT, 1, 2, sizeof(float) * 4, 8);
+		vao.enableAttrib(0);
+		vao.enableAttrib(1);
+		r.newModel(20, vao, program, 6, GL_TRIANGLES, *map.getMap(), 2);
+		r.newObject(20, glm::scale(glm::mat4(1.0f), glm::fvec3{ 400, 400, 0 }));
+
 		//AIRCRAFTS
 		MapTextureData = (uint8_t*)LoadImageData("helicopter.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
@@ -83,18 +105,19 @@ public:
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 		addModel(MapTexture, RENDER_MODEL_TOWER);
 
+		//addModel(*map.getMap(), 20);
 
 		qtAp._alloc(2);
-		generateStaticObjects(6000, 6000);
+		generateStaticObjects(MAP_WIDTH, MAP_HEIGHT);
 
 		qtAc._alloc(8);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-		for (int i = 0; i < 800; i++) {
-			ac = generateRandomAirCraft(i % 4 + 1, 6000, 6000);
+		for (int i = 0; i < N_AIRCRAFTS; i++) {
+			ac = generateRandomAirCraft(i % 4 + 1, MAP_WIDTH, MAP_HEIGHT);
 			//ac->path.AddPoint(vec2(120.0f, -140.0f));
-			ac->path.AddPoint(vec2(0,0));
+			//ac->path.AddPoint(vec2(0,0));
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -111,6 +134,7 @@ public:
 		r.RenderSelectedModel(RENDER_MODEL_PLANE);
 		r.RenderSelectedModel(RENDER_MODEL_AIRPORT);
 		r.RenderSelectedModel(RENDER_MODEL_TOWER);
+		r.RenderSelectedModel(20);
 
 		AirCraft* pca = nullptr;
 		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
@@ -143,14 +167,14 @@ private:
 		return range(gen);
 	}
 
-	std::pair<glm::fvec2, glm::fvec2> generateRandomPath() {
+	std::pair<glm::fvec2, glm::fvec2> generateRandomPath(float s) {
 		glm::fvec2 start, end;
 		int idx0, idx1;
 
-		idx0 = generateRandomValueRange(0, aircraftAmount - 1);
+		idx0 = generateRandomValueRange(0, s - 1);
 		idx1 = idx0;
 		while (idx1 == idx0) {
-			idx0 = generateRandomValueRange(0, aircraftAmount - 1);
+			idx0 = generateRandomValueRange(0, s - 1);
 		}
 		return { AirPortsVec.at(idx0)->position, AirPortsVec.at(idx1)->position };
 	}
@@ -163,7 +187,7 @@ private:
 		Plane* plane;
 
 		std::pair<glm::fvec2, glm::fvec2> s_e;
-		s_e = generateRandomPath();
+		s_e = generateRandomPath(AirPortsVec.size());
 		switch (idx)
 		{
 		case 0:
@@ -217,20 +241,30 @@ private:
 		int i;
 		StaticObj* st;
 		glm::fvec2 position;
-		for (i = 0; i < 250; i++) {
+
+		//CHANGE IT LATER AND ADD SETTINGS
+
+		int dx, dy;
+		for (i = 0; i < N_AIRPORTS; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
-			//ADD THIS TO CONFIG
+			////ADD THIS TO CONFIG
+			//int w = (MAP_WIDTH / 10.0f);
+			//int h = (MAP_HEIGHT / 10.0f);
+			////dy = (int)(w * h / ;
+			//int g = (MAP_WIDTH / 2);
+			//dx = MAP_WIDTH / (position.x + (MAP_WIDTH / 2));
+			//dy = MAP_HEIGHT / (position.y + (MAP_HEIGHT / 2));
+			//int i = dy * w + dx;
 			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 10, 10)) {
 				AirPortsVec.push_back(st);
 				qtAp._push(st, { st->position.x, st->position.y });
 				r.newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
-				aircraftAmount++;
 			}
 		}
 
-		for (i = 0; i < 10; i++) {
+		for (i = 0; i < N_TOWERS; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_TOWER };
 
@@ -272,8 +306,7 @@ private:
 		float z = 0.0003f;
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
-				qtAc._push(ac, { ac->position.x, ac->position.y });
-				t = 0.0008f;
+				t = 0.00008f;
 
 				handleAirCraftCollision(ac, 40, 40);
 				handleAirCraftsMovement(ac, t, z);
@@ -322,16 +355,13 @@ private:
 private:
 	std::unordered_map<uint8_t,std::vector<AirCraft*>> AirCraftMap;
 
-	QT<AirCraft> qtAc = { 10000, 10000 };
+	QT<AirCraft> qtAc = { MAP_WIDTH, MAP_HEIGHT };
 
 	std::vector<StaticObj*> AirPortsVec;
-	QT<StaticObj> qtAp = { 10000, 10000 };
+	QT<StaticObj> qtAp = { MAP_WIDTH, MAP_HEIGHT };
 
 	std::vector<StaticObj*> TowersVec;
-	QT<StaticObj> qtT = { 10000, 10000 };
-
-
-	int aircraftAmount = 0;
+	QT<StaticObj> qtT = { MAP_WIDTH, MAP_HEIGHT };
 
 	RenderGL r;
 	Buffer<GL_ARRAY_BUFFER> vbo;
