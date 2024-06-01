@@ -1,67 +1,111 @@
 #include "perlin.h"
 
-float PerlinNoiseGenerator::perlin2DConfigurable(float x, float y, int seed, float scale, int octaves, float lacunarity, float persistence) {
-    float total = 0.0f;
-    float frequency = scale;
-    float amplitude = 1.0f;
-    float maxAmplitude = 0.0f;
+PerlinNoiseGenerator::PerlinNoiseGenerator()
+{
+    persistence = 0;
+    frequency = 0;
+    amplitude = 0;
+    octaves = 0;
+    randomseed = 0;
+}
 
-    for (int i = 0; i < octaves; i++) {
-        total += perlin2D(x * frequency, y * frequency, seed) * amplitude;
+PerlinNoiseGenerator::PerlinNoiseGenerator(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed)
+{
+    persistence = _persistence;
+    frequency = _frequency;
+    amplitude = _amplitude;
+    octaves = _octaves;
+    randomseed = 2 + _randomseed * _randomseed;
+}
 
-        frequency *= lacunarity;
-        maxAmplitude += amplitude;
-        amplitude *= persistence;
+void PerlinNoiseGenerator::Set(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed)
+{
+    persistence = _persistence;
+    frequency = _frequency;
+    amplitude = _amplitude;
+    octaves = _octaves;
+    randomseed = 2 + _randomseed * _randomseed;
+}
+
+double PerlinNoiseGenerator::GetHeight(double x, double y) const
+{
+    return amplitude * Total(x, y);
+}
+
+double PerlinNoiseGenerator::Total(double i, double j) const
+{
+    //properties of one octave (changing each loop)
+    double t = 0.0f;
+    double _amplitude = 1;
+    double freq = frequency;
+
+    for (int k = 0; k < octaves; k++)
+    {
+        t += GetValue(j * freq + randomseed, i * freq + randomseed) * _amplitude;
+        _amplitude *= persistence;
+        freq *= 2;
     }
-    return total / maxAmplitude;
+
+    return t;
 }
 
-float PerlinNoiseGenerator::perlin2D(float x, float y, int seed) {
-    int x0 = (int)glm::floor(x);
-    int x1 = x0 + 1;
-    int y0 = (int)glm::floor(y);
-    int y1 = y0 + 1;
+double PerlinNoiseGenerator::GetValue(double x, double y) const
+{
+    int Xint = (int)x;
+    int Yint = (int)y;
+    double Xfrac = x - Xint;
+    double Yfrac = y - Yint;
 
-    float sx = x - (float)x0;
-    float sy = y - (float)y0;
+    //noise values
+    double n01 = Noise(Xint - 1, Yint - 1);
+    double n02 = Noise(Xint + 1, Yint - 1);
+    double n03 = Noise(Xint - 1, Yint + 1);
+    double n04 = Noise(Xint + 1, Yint + 1);
+    double n05 = Noise(Xint - 1, Yint);
+    double n06 = Noise(Xint + 1, Yint);
+    double n07 = Noise(Xint, Yint - 1);
+    double n08 = Noise(Xint, Yint + 1);
+    double n09 = Noise(Xint, Yint);
 
-    float n0, n1, ix0, ix1, value;
+    double n12 = Noise(Xint + 2, Yint - 1);
+    double n14 = Noise(Xint + 2, Yint + 1);
+    double n16 = Noise(Xint + 2, Yint);
 
-    n0 = dotGridGradient(x0, y0, x, y, seed);
-    n1 = dotGridGradient(x1, y0, x, y, seed);
-    ix0 = interpolate(n0, n1, sx);
+    double n23 = Noise(Xint - 1, Yint + 2);
+    double n24 = Noise(Xint + 1, Yint + 2);
+    double n28 = Noise(Xint, Yint + 2);
 
-    n0 = dotGridGradient(x0, y1, x, y, seed);
-    n1 = dotGridGradient(x1, y1, x, y, seed);
-    ix1 = interpolate(n0, n1, sx);
+    double n34 = Noise(Xint + 2, Yint + 2);
 
-    value = interpolate(ix0, ix1, sy);
-    return value;
+    //find the noise values of the four corners
+    double x0y0 = 0.0625 * (n01 + n02 + n03 + n04) + 0.125 * (n05 + n06 + n07 + n08) + 0.25 * (n09);
+    double x1y0 = 0.0625 * (n07 + n12 + n08 + n14) + 0.125 * (n09 + n16 + n02 + n04) + 0.25 * (n06);
+    double x0y1 = 0.0625 * (n05 + n06 + n23 + n24) + 0.125 * (n03 + n04 + n09 + n28) + 0.25 * (n08);
+    double x1y1 = 0.0625 * (n09 + n16 + n28 + n34) + 0.125 * (n08 + n14 + n06 + n24) + 0.25 * (n04);
+
+    //interpolate between those values according to the x and y fractions
+    double v1 = Interpolate(x0y0, x1y0, Xfrac); //interpolate in x direction (y)
+    double v2 = Interpolate(x0y1, x1y1, Xfrac); //interpolate in x direction (y+1)
+    double fin = Interpolate(v1, v2, Yfrac);  //interpolate in y direction
+
+    return fin;
 }
 
-float PerlinNoiseGenerator::interpolate(float a0, float a1, float w) {
-    return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
+double PerlinNoiseGenerator::Interpolate(double x, double y, double a) const
+{
+    double negA = 1.0 - a;
+    double negASqr = negA * negA;
+    double fac1 = 3.0 * (negASqr)-2.0 * (negASqr * negA);
+    double aSqr = a * a;
+    double fac2 = 3.0 * aSqr - 2.0 * (aSqr * a);
+
+    return x * fac1 + y * fac2; //add the weighted factors
 }
 
-glm::fvec2 PerlinNoiseGenerator::randomGradient(int ix, int iy, int seed) {
-    const unsigned w = 8 * sizeof(unsigned);
-    const unsigned s = w / 2;
-    unsigned a = ix, b = iy;
-    a *= seed; b ^= a << s | a >> w - s;
-    b *= seed * 1.27; a ^= b << s | b >> w - s;
-    a *= seed * 1.63;
-    float random = a * (3.14159265 / ~(~0u >> 1));
-    glm::fvec2 v;
-    v.x = glm::cos(random); v.y = glm::sin(random);
-    return v;
+double PerlinNoiseGenerator::Noise(int x, int y) const
+{
+    int n = x + y * 57;
+    n = (n << 13) ^ n;
+    int t = (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff;
+    return 1.0 - double(t) * 0.931322574615478515625e-9;/// 1073741824.0);
 }
-
-float PerlinNoiseGenerator::dotGridGradient(int ix, int iy, float x, float y, int seed) {
-    glm::fvec2 gradient = randomGradient(ix, iy, seed);
-
-    float dx = x - (float)ix;
-    float dy = y - (float)iy;
-
-    return (dx * gradient.x + dy * gradient.y);
-}
-

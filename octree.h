@@ -52,10 +52,10 @@ public:
     float height;
 };
 
-#define TOP_LEFT 1
-#define TOP_RIGHT 2
-#define BOTTOM_LEFT 3
-#define BOTTOM_RIGHT 4
+#define TOP_LEFT 0
+#define TOP_RIGHT 1
+#define BOTTOM_LEFT 2
+#define BOTTOM_RIGHT 3
 
 template <typename T>
 class QT {
@@ -63,12 +63,14 @@ public:
     QT() {
         root = new Node{};
         _alloc(1);
+        //root->_init(nullptr, { w,h });
     }
     QT(int w, int h)  {
         this->w = w;
         this->h = h;
         root = new Node{};
         _alloc(1);
+        //root->_init(nullptr);
     }
     ~QT() {
         std::vector<Node*> vdata;
@@ -128,7 +130,7 @@ public:
         return false;
     }
 
-    bool _collide(T* data, float w, float h, T*& c) {
+    bool _collide(T* data, float w, float h, std::vector<T*>& dataV) {
         Node* n = nullptr;
         Node* base = nullptr;
         _findNodeRec(root, data, n, base);
@@ -136,15 +138,18 @@ public:
             RectQT ob1;
             PointQT* p = n->p;
             ob1 = RectQT{ PointQT{p->x - w / 2.0f, p->y - h / 2.0f }, w, h };
-            return _collideRec(base, ob1, n, c);
+            
+            _collideRec(base, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, n, dataV);
+            return dataV.size();
         }
         return false;
     }
 
-    bool _collidePoint(PointQT& p, float w, float h, T*& data) {
+    bool _collidePoints(PointQT& p, float w, float h, std::vector<T*>& data) {
         RectQT ob1;
         ob1 = RectQT{ PointQT{p.x - w / 2.0f, p.y - h / 2.0f }, w, h };
-        return _collideRec(root, ob1, root, data);
+        _collideRec(root, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, root, data);
+        return data.size();
     }
 
     bool _collidePoint(PointQT& p, float w, float h) {
@@ -184,7 +189,6 @@ private:
             this->p = nullptr;
             this->data = nullptr;
         }
-
         PointQT* p;
         T* data;
         Node* nodes[4];
@@ -213,6 +217,27 @@ private:
         }
         rect.width /= 2.0f;
         rect.height /= 2.0f;
+    }
+
+    void _calcDim(RectQT& rect, uint8_t& dir) {
+        rect.width /= 2.0f;
+        rect.height /= 2.0f;
+        switch (dir) {
+        case TOP_LEFT:
+            break;
+        case TOP_RIGHT:
+            rect.point.x += rect.width;
+            break;
+        case BOTTOM_LEFT:
+            rect.point.y += rect.height;
+            break;
+        case BOTTOM_RIGHT:
+            rect.point.x += rect.width;
+            rect.point.y += rect.height;
+            break;
+        default:
+            break;
+        }
     }
 
     void _findNodeRec(Node* n, T* data, Node*& finallNode, Node*& base) {
@@ -273,22 +298,24 @@ private:
         }
     }
 
-    bool _collideRec(Node* n, const RectQT& ob1, Node* ignore, T*& data) {
-        if (n->data || n == root) {
-            if (n != ignore && n->p) {
-                RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
-                if (ob1.intersect(ob2)) {
-                    data = n->data;
-                    return true;
-                }
+    void _collideRec(Node* n, const RectQT& ob1, RectQT nodeRect, Node* ignore, std::vector<T*>& data) {
+        if (n != ignore && n->p) {
+            RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
+            if (ob1.intersect(ob2)) {
+                data.push_back(n->data);
             }
-            for (int i = 0; i < 4; i++) {
-                if (_collideRec(n->nodes[i], ob1, ignore, data)) {
-                    return true;
+        }
+        RectQT nRect;
+        for (uint8_t i = 0; i < 4; i++) {
+            nRect = nodeRect;
+            _calcDim(nRect, i);
+                
+            if (n->nodes[i]->data) {
+                if (nRect.intersect(ob1)) {
+                    _collideRec(n->nodes[i], ob1, nRect, ignore, data);
                 }
             }
         }
-        return false;
     }
 
     bool _collideRec(Node* n, const RectQT& ob1, Node* ignore) {

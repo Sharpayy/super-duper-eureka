@@ -75,6 +75,9 @@ public:
 	float acceleration;
 	float angle;
 
+	float collide;
+	float dist;
+
 	uint8_t getType();
 	float CalcAngle();
 	void SetAngle(float a);

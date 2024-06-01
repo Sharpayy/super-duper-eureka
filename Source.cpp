@@ -300,7 +300,7 @@ int main(int argc, char** argv)
 
 	int64_t SumRenderTime = 0;
 
-	PerlinNoiseGenerator generator;
+	/*PerlinNoiseGenerator generator;
 	float x1, y1;
 	int w, h, idx;
 	w = 100;
@@ -314,12 +314,12 @@ int main(int argc, char** argv)
 			idx = y1 * w + x1;
 			texArr[idx] = (char)((generator.perlin2DConfigurable(x1 * s, y1 * s, 121143, 1.0f, 8, 2.0f, 0.5f) * 0.5f + 0.5f) * 255.0f);
 		}
-	}
+	}*/
 
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager { r, SquareVBO, iconProgram, &Bezier, SquareEBO, &camera};
+	AManager amanager { &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera};
 
 
 	while (true)
@@ -330,7 +330,7 @@ int main(int argc, char** argv)
 		
 
 		//RenderElapsedTime.TimeStart();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		amanager.onUpdate();
 		Bezier.Render(0);
 		//RenderElapsedTime.TimeEnd();

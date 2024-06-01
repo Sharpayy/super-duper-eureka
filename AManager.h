@@ -21,9 +21,9 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 #define SCALE 10
 #define MAP_OFFSETX 0
 #define MAP_OFFSETY 0
-#define N_AIRPORTS 500
+#define N_AIRPORTS 400
 #define N_TOWERS 200
-#define N_AIRCRAFTS 500
+#define N_AIRCRAFTS 1000
 
 class CollisionDrawer
 {
@@ -46,7 +46,7 @@ public:
 class AManager {
 public:
 	AManager() = default;
-	AManager(RenderGL& r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo, Camera* camera) {
+	AManager(RenderGL* r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, Program mapProgram, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo, Camera* camera) {
 		this->r = r;
 		this->vbo = vbo;
 		this->ebo = ebo;
@@ -62,7 +62,7 @@ public:
 		Texture2D MapTexture;
 		uint8_t* MapTextureData;
 
-		map = Map{ MAP_WIDTH / 10, MAP_HEIGHT / 10, 2312423, 4, 8, 0.5f, 0.5f };
+		map = Map{ MAP_WIDTH / SCALE, MAP_HEIGHT / SCALE, 1.0, 2.5, 1.0, 7, 21324 };
 		VertexBuffer vao = VertexBuffer();
 		vao.bind();
 		vbo.bind();
@@ -72,8 +72,8 @@ public:
 		vao.addAttrib(GL_FLOAT, 1, 2, sizeof(float) * 4, 8);
 		vao.enableAttrib(0);
 		vao.enableAttrib(1);
-		r.newModel(20, vao, program, 6, GL_TRIANGLES, *map.getMap(), 2);
-		r.newObject(20, glm::scale(glm::mat4(1.0f), glm::fvec3{ 400, 400, 0 }));
+		r->newModel(20, vao, mapProgram, 6, GL_TRIANGLES, map.getMap(), 2);
+		r->newObject(20, glm::scale(glm::mat4(1.0f), glm::fvec3{ MAP_WIDTH / 2.0f, MAP_HEIGHT / 2.0f, 0 }));
 
 		//AIRCRAFTS
 		MapTextureData = (uint8_t*)LoadImageData("helicopter.png", 1, &c, &x, &y);
@@ -117,7 +117,7 @@ public:
 		for (int i = 0; i < N_AIRCRAFTS; i++) {
 			ac = generateRandomAirCraft(i % 4 + 1, MAP_WIDTH, MAP_HEIGHT);
 			//ac->path.AddPoint(vec2(120.0f, -140.0f));
-			//ac->path.AddPoint(vec2(0,0));
+			ac->path.AddPoint(vec2(0,0));
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -127,24 +127,24 @@ public:
 	}
 
 	void onUpdate() {
-		r.RenderSelectedModel(RENDER_MODEL_HELICOPTER);
-		r.RenderSelectedModel(RENDER_MODEL_GLIDER);
-		r.RenderSelectedModel(RENDER_MODEL_BALLON);
-		r.RenderSelectedModel(RENDER_MODEL_JET);
-		r.RenderSelectedModel(RENDER_MODEL_PLANE);
-		r.RenderSelectedModel(RENDER_MODEL_AIRPORT);
-		r.RenderSelectedModel(RENDER_MODEL_TOWER);
-		r.RenderSelectedModel(20);
+		r->RenderSelectedModel(20);
+		r->RenderSelectedModel(RENDER_MODEL_AIRPORT);
+		r->RenderSelectedModel(RENDER_MODEL_HELICOPTER);
+		r->RenderSelectedModel(RENDER_MODEL_TOWER);
+		r->RenderSelectedModel(RENDER_MODEL_GLIDER);
+		r->RenderSelectedModel(RENDER_MODEL_BALLON);
+		r->RenderSelectedModel(RENDER_MODEL_JET);
+		r->RenderSelectedModel(RENDER_MODEL_PLANE);
 
-		AirCraft* pca = nullptr;
 		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
 			//FOR PERFORMANCE
 			glm::fvec2 mousePos = camera->getMousePosition();
-			std::cout << mousePos.x << "|" << mousePos.y << "\n";
-			if (qtAc._collidePoint(PointQT{ mousePos.x, mousePos.y }, 20, 20, pca)) {
-				std::cout << "Collision" << "\n";
-				br->UpdateData((BezierCurveParameters*)(pca->path.getData()), pca->path.path.size(), 0);
-				pathRenderCount = pca->path.path.size();
+			//std::cout << mousePos.x << "|" << mousePos.y << "\n";
+			std::vector<AirCraft*> pcaV;
+			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 20, 20, pcaV)) {
+				std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
+				br->UpdateData((BezierCurveParameters*)(pcaV.at(0)->path.getData()), pcaV.at(0)->path.path.size(), 0);
+				pathRenderCount = pcaV.at(0)->path.path.size();
 			}
 		}
 
@@ -192,23 +192,23 @@ private:
 		{
 		case 0:
 			ballon = new Ballon{ s_e.first, s_e.second, RENDER_MODEL_BALLON };
-			r.newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
+			r->newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
 			jet = new Jet{ s_e.first, s_e.second, RENDER_MODEL_JET };
-			r.newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
+			r->newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
 			helicopter = new Helicopter{ s_e.first, s_e.second, RENDER_MODEL_HELICOPTER };
-			r.newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
+			r->newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
 			plane = new Plane{ s_e.first, s_e.second, RENDER_MODEL_PLANE };
-			r.newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
+			r->newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
 			glider = new Glider{ s_e.first, s_e.second, RENDER_MODEL_GLIDER };
-			r.newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
+			r->newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
 			return (AirCraft*)glider;
 
 		default:
@@ -234,7 +234,7 @@ private:
 		vao.enableAttrib(1);
 
 		cd.AddCollisionBuffer(idModel, 1000, vao);
-		r.newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
+		r->newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
 	}
 
 	void generateStaticObjects(int mapWidth, int mapHeight) {
@@ -244,23 +244,27 @@ private:
 
 		//CHANGE IT LATER AND ADD SETTINGS
 
-		int dx, dy;
+		float dx, dy;
 		for (i = 0; i < N_AIRPORTS; i++) {
+			//position = { mapWidth / 2.0f, mapHeight / 2.0f };
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
-			////ADD THIS TO CONFIG
-			//int w = (MAP_WIDTH / 10.0f);
-			//int h = (MAP_HEIGHT / 10.0f);
+			//ADD THIS TO CONFIG
+			int w = (MAP_WIDTH / 10.0f);
+			int h = (MAP_HEIGHT / 10.0f);
 			////dy = (int)(w * h / ;
 			//int g = (MAP_WIDTH / 2);
 			//dx = MAP_WIDTH / (position.x + (MAP_WIDTH / 2));
 			//dy = MAP_HEIGHT / (position.y + (MAP_HEIGHT / 2));
 			//int i = dy * w + dx;
+			dx = (position.x + MAP_WIDTH / 2) / MAP_WIDTH;
+			dy = (position.y + MAP_HEIGHT / 2) / MAP_HEIGHT;
+			//int idx = dy * MAP_WIDTH * w + dx * MAP_HEIGHT * w;
 			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 10, 10)) {
 				AirPortsVec.push_back(st);
 				qtAp._push(st, { st->position.x, st->position.y });
-				r.newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
+				r->newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
 			}
 		}
 
@@ -272,7 +276,7 @@ private:
 			if (!qtT._collidePoint(PointQT{ position.x, position.y }, 25, 25)) {
 				TowersVec.push_back(st);
 				qtT._push(st, { st->position.x, st->position.y });
-				r.newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
+				r->newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
 			}
 		}
 	}
@@ -285,18 +289,33 @@ private:
 			angle = ac->angle + 1.57079632679;
 		}
 		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
-		r.BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r.SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f + z}) * glm::rotate(glm::mat4(1.0f), angle , glm::vec3(0, 0, 1)), true);
+		r->BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
+		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f + z}) * glm::rotate(glm::mat4(1.0f), angle , glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
 		AirCraft* acr = nullptr;
 		// ultra slow shit
-		r.BindActiveModel(LONG_GET_MODEL(ac->LongId));
-		if (qtAc._collide(ac, w, h))
-			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 1.0f, r.MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
-		else
-			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 0.0f, r.MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		r->BindActiveModel(LONG_GET_MODEL(ac->LongId));
+
+		//ADD THIS TO SETTINGS
+		float distMax = 60;
+		float distMin = distMax;
+		std::vector<AirCraft*> colv;
+		if (qtAc._collide(ac, w, h, colv)) {
+			ac->collide = true;
+			for (auto& col : colv) {
+				float dist = glm::distance(ac->position, col->position);
+				if (dist < distMin) {
+					distMin = dist;
+				}
+			}
+			ac->dist = distMin;
+			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), distMax - distMin, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		}
+		else {
+			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId), 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		}
 	}
 
 	void handleAirCraftLogic() {
@@ -306,9 +325,10 @@ private:
 		float z = 0.0003f;
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
-				t = 0.00008f;
+				t = 0.002f;
 
-				handleAirCraftCollision(ac, 40, 40);
+				ac->collide = false;
+				handleAirCraftCollision(ac, 60, 60);
 				handleAirCraftsMovement(ac, t, z);
 				if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
 					AirCraftsToRemove.push_back(ac);
@@ -319,8 +339,8 @@ private:
 		}
 
 		for (AirCraft* ac : AirCraftsToRemove) {
-			r.DisableObjectL(ac->LongId);
-			r.deleteObject((*(RENDER_LONG_ID*)&ac->LongId).ModelId, (*(RENDER_LONG_ID*)&ac->LongId).ObjectId);
+			r->DisableObjectL(ac->LongId);
+			r->deleteObject((*(RENDER_LONG_ID*)&ac->LongId).ModelId, (*(RENDER_LONG_ID*)&ac->LongId).ObjectId);
 			auto& vec = AirCraftMap[ac->getType()];
 			vec.erase(std::remove(vec.begin(), vec.end(), ac), vec.end());
 		}
@@ -363,7 +383,7 @@ private:
 	std::vector<StaticObj*> TowersVec;
 	QT<StaticObj> qtT = { MAP_WIDTH, MAP_HEIGHT };
 
-	RenderGL r;
+	RenderGL* r;
 	Buffer<GL_ARRAY_BUFFER> vbo;
 	Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo;
 	Program program;
