@@ -70,7 +70,7 @@ public:
         this->h = h;
         root = new Node{};
         _alloc(1);
-        //root->_init(nullptr);
+        //root->_init(nullptr, new PointQT{});
     }
     ~QT() {
         std::vector<Node*> vdata;
@@ -155,7 +155,7 @@ public:
     bool _collidePoint(PointQT& p, float w, float h) {
         RectQT ob1;
         ob1 = RectQT{ PointQT{p.x - w / 2.0f, p.y - h / 2.0f }, w, h };
-        return _collideRec(root, ob1, root);
+        return _collideRec(root, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, root);
     }
 
     void _alloc(int depth) {
@@ -248,8 +248,9 @@ private:
                 finallNode = n;
                 return;
             }
+
             for (int i = 0; i < 4; i++) {
-                _findNodeRec(n->nodes[i], data, finallNode, base);
+                if(!finallNode) _findNodeRec(n->nodes[i], data, finallNode, base);
             }
         }
     }
@@ -318,7 +319,7 @@ private:
         }
     }
 
-    bool _collideRec(Node* n, const RectQT& ob1, Node* ignore) {
+    bool _collideRec(Node* n, const RectQT& ob1, RectQT nodeRect, Node* ignore) {
         if (n->data || n == root) {
             if (n != ignore && n->p) {
                 RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
@@ -326,9 +327,15 @@ private:
                     return true;
                 }
             }
-            for (int i = 0; i < 4; i++) {
-                if (_collideRec(n->nodes[i], ob1, ignore)) {
-                    return true;
+            RectQT nRect;
+            for (uint8_t i = 0; i < 4; i++) {
+                nRect = nodeRect;
+                _calcDim(nRect, i);
+
+                if (n->nodes[i]->data) {
+                    if (nRect.intersect(ob1)) {
+                        _collideRec(n->nodes[i], ob1, nRect, ignore);
+                    }
                 }
             }
         }

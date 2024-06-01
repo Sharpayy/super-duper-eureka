@@ -18,10 +18,10 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 #define MAP_WIDTH 10000
 #define MAP_HEIGHT 10000
-#define SCALE 10
+#define SCALE 50
 #define MAP_OFFSETX 0
 #define MAP_OFFSETY 0
-#define N_AIRPORTS 400
+#define N_AIRPORTS 1000
 #define N_TOWERS 200
 #define N_AIRCRAFTS 1000
 
@@ -116,8 +116,8 @@ public:
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
 		for (int i = 0; i < N_AIRCRAFTS; i++) {
 			ac = generateRandomAirCraft(i % 4 + 1, MAP_WIDTH, MAP_HEIGHT);
-			//ac->path.AddPoint(vec2(120.0f, -140.0f));
-			ac->path.AddPoint(vec2(0,0));
+			ac->path.AddPoint(vec2(120.0f, -140.0f));
+			//ac->path.AddPoint(vec2(0,0));
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -142,7 +142,7 @@ public:
 			//std::cout << mousePos.x << "|" << mousePos.y << "\n";
 			std::vector<AirCraft*> pcaV;
 			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 20, 20, pcaV)) {
-				std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
+				//std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
 				br->UpdateData((BezierCurveParameters*)(pcaV.at(0)->path.getData()), pcaV.at(0)->path.path.size(), 0);
 				pathRenderCount = pcaV.at(0)->path.path.size();
 			}
@@ -303,7 +303,6 @@ private:
 		float distMin = distMax;
 		std::vector<AirCraft*> colv;
 		if (qtAc._collide(ac, w, h, colv)) {
-			ac->collide = true;
 			for (auto& col : colv) {
 				float dist = glm::distance(ac->position, col->position);
 				if (dist < distMin) {
@@ -327,7 +326,6 @@ private:
 			for (AirCraft* ac : planeType.second) {
 				t = 0.002f;
 
-				ac->collide = false;
 				handleAirCraftCollision(ac, 60, 60);
 				handleAirCraftsMovement(ac, t, z);
 				if (glm::distance(ac->position, ac->path.destination) < 3.0f) {

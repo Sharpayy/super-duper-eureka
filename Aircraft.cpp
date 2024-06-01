@@ -12,7 +12,6 @@ AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 	//collisionDist = 0.0f;
-	collide = false;
 	dist = 0;
 }
 
@@ -21,7 +20,6 @@ Glider::Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	path = { position, destination };
 
 	this->type = type;
-	collide = false;
 }
 
 uint8_t AirCraft::getType() {
@@ -33,7 +31,6 @@ Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	path = { position, destination };
 
 	this->type = type;
-	collide = false;
 }
 
 Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
@@ -41,7 +38,6 @@ Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type
 	path = { position, destination };
 
 	this->type = type;
-	collide = false;
 }
 
 Jet::Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
@@ -49,7 +45,6 @@ Jet::Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	path = { position, destination };
 
 	this->type = type;
-	collide = false;
 }
 
 Plane::Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
@@ -57,7 +52,6 @@ Plane::Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	path = { position, destination };
 
 	this->type = type;
-	collide = false;
 }
 
 void AirCraft::onUpdate() {
@@ -110,8 +104,9 @@ glm::fvec2 FlyPath::getBezierPosition(BezierCurveParametersA* param, float dt, b
 	if (!change)
 		this->t -= dt;
 
-	if (t >= 1.0f)
+	if (t >= 1.0f && change == true)
 	{
+		assert(currentPathSection < path.size());
 		t = 0.0f;
 		currentPathSection++;
 	}
