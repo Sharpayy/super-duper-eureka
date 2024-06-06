@@ -406,22 +406,6 @@ int main(int argc, char** argv)
 
 	int64_t SumRenderTime = 0;
 
-	PerlinNoiseGenerator generator;
-	float x1, y1;
-	int w, h, idx;
-	w = 100;
-	h = 100;
-	float s = 0.1f;
-
-	int size = w * h;
-	char* texArr = new char[size];
-	for (y1 = 0; y1 < h; y1++) {
-		for (x1 = 0; x1 < w; x1++) {
-			idx = y1 * w + x1;
-			texArr[idx] = (char)((generator.perlin2DConfigurable(x1 * s, y1 * s, 121143, 1.0f, 8, 2.0f, 0.5f) * 0.5f + 0.5f) * 255.0f);
-		}
-	}
-
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
