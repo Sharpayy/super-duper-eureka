@@ -8,10 +8,11 @@
 
 struct StaticObj : public Renderable {
 	StaticObj();
-	StaticObj(glm::fvec2 position, uint8_t type);
+	StaticObj(glm::fvec2 position, uint8_t type, uint8_t npm);
 	glm::fvec2 position;
 
 	uint8_t getType();
 private:
+	uint32_t npm;
 	uint8_t type;
 };

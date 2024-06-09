@@ -334,7 +334,9 @@ private:
 
                 if (n->nodes[i]->data) {
                     if (nRect.intersect(ob1)) {
-                        _collideRec(n->nodes[i], ob1, nRect, ignore);
+                        if (_collideRec(n->nodes[i], ob1, nRect, ignore)) {
+                            return true;
+                        }
                     }
                 }
             }
