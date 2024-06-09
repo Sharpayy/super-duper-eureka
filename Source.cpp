@@ -341,7 +341,17 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
+	//AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
+
+	r.newObject(RENDER_MODEL_SQUARE1, glm::mat4(1.0f));
+	r.newObject(RENDER_MODEL_SQUARE1, glm::mat4(1.0f));
+	r.newObject(RENDER_MODEL_SQUARE1, glm::mat4(1.0f));
+	r.newObject(RENDER_MODEL_SQUARE1, glm::mat4(1.0f));
+
+	r.DisableObject(0);
+	r.deleteObject(RENDER_MODEL_SQUARE1, 0);
+
+	r.SetObjectMatrix(4, glm::mat4(1.0f), false);
 
 
 	while (true)

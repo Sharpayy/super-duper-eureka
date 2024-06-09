@@ -1,7 +1,7 @@
 #include "iRendered.h"
 #include "iAllocators.h"
 
-uint32_t POOLPAGE_MEDIUM_NEW_ALLOCATE = 8;
+uint32_t POOLPAGE_MEDIUM_NEW_ALLOCATE = 1;
 POOLMEDIUMPAGES poolAllocator = POOLMEDIUMPAGES(64, 32, sizeof(RenderModel));
 PerformanceTimer RenderGlobalTimer = GetEmptyTimer();
 
