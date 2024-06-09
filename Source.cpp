@@ -1,6 +1,7 @@
 #include "AManager.h"
 #include "Models.h"
 #include "Objects.h"
+#include "Camera.h"
 
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
@@ -9,36 +10,6 @@ vec2 GetDir(float a)
 {
 	return vec2(cos(a), sin(a));
 }
-
-void AddCollisionBuffer(VertexBuffer vao, uint32_t div, uint32_t amount, uint32_t* id)
-{
-	uint32_t cb;
-	glGenBuffers(1, &cb);
-
-	vao.bind();
-	glBindBuffer(GL_ARRAY_BUFFER, cb);
-	glBufferData(GL_ARRAY_BUFFER, amount * 4, NULL, GL_DYNAMIC_DRAW);
-
-	vao.addAttrib(GL_FLOAT, 2, 1, 4, 0);
-	vao.enableAttrib(2);
-
-	glVertexAttribDivisor(2, 1);
-	glBindVertexArray(0);
-	*id = cb;
-}
-
-typedef struct _RenderableMapSettings
-{
-	float MoveX;
-	float MoveY;
-	float ScaleX;
-	float ScaleY;
-
-	mat4 CameraMatrix;
-	mat4 ScaleMatrix;
-	uint32_t NeedUpdate;
-
-} RenderableMapSettings;
 
 // settings
 
@@ -60,109 +31,8 @@ uint32_t ScreenHeigth = 800;
 #define DEBUG_INFO_SPACE 2048
 char debugInfo[DEBUG_INFO_SPACE];
 
-class Camera
-{
-public:
-	Camera(vec3 pos)
-	{
-		yaw = 90.0f; pitch = 0.0f; roll = 0.0f;
-		this->pos = pos;
-
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = normalize(cross(f, r));
-	}
-	mat4 getMatrix()
-	{
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-
-		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
-
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = mat3(roll_mat) * normalize(cross(f, r));
-		mat4 M = lookAt(pos, f + pos, u);
-		return M;
-	}
-	vec3 getPos()
-	{
-		return pos;
-	}
-	vec3* getPPos()
-	{
-		return &pos;
-	}
-	void addYaw(float x)
-	{
-		yaw += x;
-	}
-	void addPitch(float x)
-	{
-		pitch += x;
-	}
-	void addRoll(float x)
-	{
-		roll += x;
-	}
-	void setMatrix(mat4* matrix)
-	{
-		f = normalize(vec3(
-			cos(yaw) * cos(pitch),
-			sin(pitch),
-			cos(pitch) * sin(yaw)
-		));
-
-		mat4 roll_mat = glm::rotate(mat4(1.0f), roll, f);
-
-		r = normalize(cross(f, vec3(0.0f, 1.0f, 0.0f)));
-		u = mat3(roll_mat) * normalize(cross(f, r));
-
-		*matrix = lookAt(pos, f + pos, u);
-	}
-	void setYaw(float yaw)
-	{
-		this->yaw = yaw;
-	}
-	void setPitch(float pitch)
-	{
-		this->pitch = pitch;
-	}
-	void setRoll(float roll)
-	{
-		this->roll = roll;
-	}
-	vec3 getRight()
-	{
-		return r;
-	}
-	void setPos(vec3 pos)
-	{
-		this->pos = pos;
-	}
-	void addPos(vec3 pos)
-	{
-		this->pos += pos;
-	}
-	void posAddFront(float s)
-	{
-		pos += f * s;
-	}
-	void posAddRight(float s)
-	{
-		pos += r * s;
-	}
-
-	float yaw, pitch, roll;
-	vec3 pos;
-	vec3 r, u, f;
-};
+bool keysPressed[SDL_NUM_SCANCODES] = { false };
+bool wasPressed[SDL_NUM_SCANCODES] = { false };
 
 void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 {
@@ -195,8 +65,31 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 		if (e->key.keysym.sym == SDLK_a)
 			MapSettings->MoveX -= move_factor;
 
+		if (e->key.keysym.sym = SDL_KEYDOWN) {
+			keysPressed[e->key.keysym.scancode] = true;
+		}
+		if (e->key.keysym.sym = SDL_KEYUP) {
+			keysPressed[e->key.keysym.scancode] = false;
+		}
+
 		MapSettings->CameraMatrix = lookAt(vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f), vec3(MapSettings->MoveX, MapSettings->MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 		MapSettings->NeedUpdate = 1;
+	}
+	if (e->type == SDL_MOUSEBUTTONDOWN) {
+		if (e->button.button == SDL_BUTTON_LEFT) {
+			keysPressed[SDL_SCANCODE_LEFT] = true;
+		}
+		else if (e->button.button == SDL_BUTTON_RIGHT) {
+			keysPressed[SDL_SCANCODE_RIGHT] = true;
+		}
+	}
+	if (e->type == SDL_MOUSEBUTTONUP) {
+		if (e->button.button == SDL_BUTTON_LEFT) {
+			keysPressed[SDL_SCANCODE_LEFT] = false;
+		}
+		else if (e->button.button == SDL_BUTTON_RIGHT) {
+			keysPressed[SDL_SCANCODE_RIGHT] = false;
+		}
 	}
 }
 
@@ -223,12 +116,14 @@ int main(int argc, char** argv)
 	const char* srcShaderBezierTes = GetFileData((char*)"tes_shader_bezier.glsl")->c_str();
 	const char* srcShaderBezierFrg = GetFileData((char*)"frg_shader_bezier.glsl")->c_str();
 
+	const char* srcPerlinShaderCom = GetFileData((char*)"PerlinGenerator.glsl")->c_str();
+
 	Shader<GL_VERTEX_SHADER>				 shdrBezVtx = Shader<GL_VERTEX_SHADER>(srcShaderBezierVtx);
 	Shader<GL_TESS_CONTROL_SHADER>			 shdrBezTcs = Shader<GL_TESS_CONTROL_SHADER>(srcShaderBezierTcs);
 	Shader<GL_TESS_EVALUATION_SHADER>		 shdrBezTes = Shader<GL_TESS_EVALUATION_SHADER>(srcShaderBezierTes);
 	Shader<GL_FRAGMENT_SHADER>				 shdrBezFrg = Shader<GL_FRAGMENT_SHADER>(srcShaderBezierFrg);
 
-	Shader<GL_VERTEX_SHADER>   shdrVertex   = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
+	Shader<GL_VERTEX_SHADER>   shdrVertex = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
 	Shader<GL_COMPUTE_SHADER>  shdrCompute = Shader<GL_COMPUTE_SHADER>(srcShaderCompute);
 	Shader<GL_VERTEX_SHADER>   shdrPstPrVertex = Shader<GL_VERTEX_SHADER>(srcPstPrVertex);
@@ -238,6 +133,17 @@ int main(int argc, char** argv)
 	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgIcon = Shader<GL_FRAGMENT_SHADER>(srcShaderIconFragment);
 	Shader<GL_VERTEX_SHADER>   shdrVertIcon = Shader<GL_VERTEX_SHADER>(srcShaderIconVertex);
+	Shader<GL_COMPUTE_SHADER>  shdrPerlinComp = Shader<GL_COMPUTE_SHADER>(srcPerlinShaderCom);
+
+	Program pp = Program();
+	pp.programAddShader(shdrPerlinComp.id);
+	pp.programCompile();
+
+	shdrPerlinComp.shaderGetDebugInfo(debugInfo, 2048);
+	printf(debugInfo);
+
+	pp.programGetDebugInfo(debugInfo, 2048);
+	printf(debugInfo);
 
 	Program BezierProg = Program();
 	BezierProg.programAddShader(shdrBezVtx.id);
@@ -296,6 +202,31 @@ int main(int argc, char** argv)
 	uint32_t ulSelectedModel = glGetUniformLocation(iconProgram.id, "SelectedModelId");
 	glUniform1f(ulIconScale, BaseIconScale);
 	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
+
+#define map_gen_size_x 500
+#define map_gen_size_y 500
+
+	Texture2D write_texture = Texture2D(NULL, map_gen_size_x, map_gen_size_y, GL_RGBA32F, GL_RGBA32F, 0, GL_FLOAT);
+	glActiveTexture(GL_TEXTURE2);
+	UniformBufferObject perlin_gen_data = UniformBufferObject();
+	float perlin_gen_values[10];
+
+	perlin_gen_values[0] = 1.0f;
+	perlin_gen_values[1] = 2.0f;
+	perlin_gen_values[9] = 10.0f;
+
+	perlin_gen_data.data(sizeof(float) * 10, perlin_gen_values, GL_STATIC_DRAW);
+
+	glUseProgram(pp.id);
+
+	perlin_gen_data.bindBase(1);
+	glBindImageTexture(0, write_texture.id, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	auto f = glGetError();
+	
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	glDispatchCompute(map_gen_size_x / 10, map_gen_size_y / 10, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
@@ -364,13 +295,13 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, MapTexture, 200010);
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, write_texture, 200010);
 	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
 	MapSetting.MoveX = 0.0f;
 	MapSetting.MoveY = 0.0f;
-	MapSetting.ScaleX = ScreenWidth  / 2.0f;
+	MapSetting.ScaleX = ScreenWidth / 2.0f;
 	MapSetting.ScaleY = ScreenHeigth / 2.0f;
 	MapSetting.CameraMatrix = lookAt(vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f), vec3(MapSetting.MoveX, MapSetting.MoveY, 0.0f) + LOOK_DIRECTION, vec3(0.0f, 1.0f, 0.0f));
 	MapSetting.ScaleMatrix = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -1000.0f, 1000.0f);
@@ -380,7 +311,8 @@ int main(int argc, char** argv)
 	r.UpdateShaderDataCamera();
 
 	win.customEventDispatch = std::bind(CustomEventDispatcher, std::placeholders::_1, &MapSetting);
-	
+	Camera camera = { &MapSetting, ScreenWidth, ScreenHeigth };
+
 #define OM(A) r.GetObjectMatrix(A)
 
 
@@ -409,29 +341,20 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ r, Square, iconProgram, Bezier};
+	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
 
-	r.BindActiveModel(RENDER_MODEL_BALLON);
-	VertexBuffer cvao = r.GetModelVertexArray();
-
-	float data = 1.0f;
-	uint32_t bid;
-	AddCollisionBuffer(cvao, 0, r.GetModelObjectCapacity(), &bid);
-	glBindBuffer(GL_ARRAY_BUFFER, bid);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, 4, &data);
-	//glBufferSubData(GL_ARRAY_BUFFER, 4, 4, &data);
 
 	while (true)
 	{
 		evLoopStart = clock();
 		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
 
 		//RenderElapsedTime.TimeStart();
+		//amanager.onUpdate();
 		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
-		amanager.onUpdate();
-		Bezier.Render(10);
+		Bezier.Render(0);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
@@ -456,7 +379,7 @@ int main(int argc, char** argv)
 
 			char NewWinTitle[64];
 			SumRenderTime = SumRenderTime / 1000000;
-			
+
 			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
 
 			SDL_SetWindowTitle(win.win, NewWinTitle);

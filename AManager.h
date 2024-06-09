@@ -1,4 +1,4 @@
-﻿﻿#include "octree.h"
+﻿#include "octree.h"
 #include "StaticObjects.h"
 #include "Map.h"
 #include "Camera.h"
@@ -148,7 +148,7 @@ public:
 			}
 		}
 
-
+		
 		//int i = 0;
 		//for (auto& ac : AirCraftVec) {
 		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
@@ -250,17 +250,12 @@ private:
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			st = new StaticObj{ position, RENDER_MODEL_AIRPORT };
 
-			//ADD THIS TO CONFIG
-			int w = (MAP_WIDTH / 10.0f);
-			int h = (MAP_HEIGHT / 10.0f);
-			////dy = (int)(w * h / ;
-			//int g = (MAP_WIDTH / 2);
-			//dx = MAP_WIDTH / (position.x + (MAP_WIDTH / 2));
-			//dy = MAP_HEIGHT / (position.y + (MAP_HEIGHT / 2));
-			//int i = dy * w + dx;
-			dx = (position.x + MAP_WIDTH / 2) / MAP_WIDTH;
-			dy = (position.y + MAP_HEIGHT / 2) / MAP_HEIGHT;
-			//int idx = dy * MAP_WIDTH * w + dx * MAP_HEIGHT * w;
+			uint8_t* a = map.GetTile(position.x, position.y);
+			uint8_t v[3] = { (uint8_t)0.0f, (uint8_t)105.0f, (uint8_t)148.0f };
+
+			if (memcmp(a, v, 3) != 0)
+				continue;
+
 			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 10, 10)) {
 				AirPortsVec.push_back(st);
 				qtAp._push(st, { st->position.x, st->position.y });
@@ -290,7 +285,7 @@ private:
 		}
 		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
 		r->BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f + z }) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
+		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f + z}) * glm::rotate(glm::mat4(1.0f), angle , glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
@@ -371,7 +366,7 @@ private:
 	}
 
 private:
-	std::unordered_map<uint8_t, std::vector<AirCraft*>> AirCraftMap;
+	std::unordered_map<uint8_t,std::vector<AirCraft*>> AirCraftMap;
 
 	QT<AirCraft> qtAc = { MAP_WIDTH, MAP_HEIGHT };
 

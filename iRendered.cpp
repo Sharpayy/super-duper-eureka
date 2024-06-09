@@ -743,6 +743,13 @@ Texture2D::Texture2D()
 	id = 0;
 }
 
+Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location, GLenum type)
+{
+	glGenTextures(1, &id);
+	glBindTexture(GL_TEXTURE_2D, id);
+	glTexImage2D(GL_TEXTURE_2D, 0, data_int, x, y, 0, data_type, type, data);
+}
+
 Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int)
 {
 	glGenTextures(1, &id);

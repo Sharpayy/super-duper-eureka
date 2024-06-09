@@ -39,6 +39,15 @@
 //Biome{ SAVANNA, 95.5f, (char)0, (char)128, (char)0 },
 //Biome{ TAIGA, 127.0f, (char)0, (char)100, (char)0 }
 
+#define MAP_WIDTH 10000
+#define MAP_HEIGHT 10000
+#define SCALE 50
+#define MAP_OFFSETX 0
+#define MAP_OFFSETY 0
+#define N_AIRPORTS 1000
+#define N_TOWERS 200
+#define N_AIRCRAFTS 1000
+
 class Map {
 public:
 	Map() = default;
@@ -68,6 +77,17 @@ public:
 		map = Texture2D{ data, (int)map_w, (int)map_h , GL_RGB , GL_RGBA };
 		map.genMipmap();
 		delete data;
+	}
+
+	uint8_t* GetTile(float x, float y)
+	{
+		float true_x = (x / SCALE) + (MAP_WIDTH  / SCALE / 2.0f);
+		float true_y = (y / SCALE) + (MAP_HEIGHT / SCALE / 2.0f);
+
+		int idx = ((int)true_y * 3 * map_w) + ((int)true_x * 3);
+
+		uint8_t* m = (uint8_t*)data + idx;
+		return m;
 	}
 
 	Texture2D getMap() {
