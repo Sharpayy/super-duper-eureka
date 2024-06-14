@@ -4,22 +4,6 @@
 #include <queue>
 #include <vector>
 #include "Renderable.h"
-#include <glew.h>
-
-#define GLT_IMPLEMENTATION
-#define GLT_MANUAL_VIEWPORT
-#include "glText.h"
-
-typedef struct _AircraftParameters
-{
-	GLTtext* model;
-	GLTtext* airline;
-	GLTtext* speed;
-	GLTtext* heigth;
-	
-	glm::vec2 position;
-	glm::vec2 scale;
-} AircraftParameters;
 
 typedef struct BezierCurveParametersA
 {

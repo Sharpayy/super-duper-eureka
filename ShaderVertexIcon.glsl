@@ -23,6 +23,7 @@ layout(std430, binding = 6) restrict buffer IDX
 
 out vec2 uv_o;
 flat out float checko;
+flat out uint ModelId;
 uniform float uIconScale;
 
 void main()
@@ -34,5 +35,6 @@ void main()
 	gl_Position = matProjCamera * mModel * sModel * vec4(pos, 0.0, 1.0);
 
 	uv_o = uv_c;
+	ModelId = MdlId;
 	checko = check;
 }

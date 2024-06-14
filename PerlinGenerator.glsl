@@ -166,9 +166,9 @@ void main()
     for (int i = 0; i < 10; i++) {
 		if (val >= biomes[i].thr) {
 			color = vec3(biomes[i].c1, biomes[i].c2, biomes[i].c3);
-            //d[d_idx] = biomes[i].type;
-            d[d_idx] = (biomes[i].type << 16) + int(biomes[i].thr);
-            //d[d_idx] = int(biomes[i].thr);
+            d[d_idx] = biomes[i].type;
+            d[d_idx] = d[d_idx] << 16;
+            d[d_idx] = int(biomes[i].thr);
             
             break;
 		}

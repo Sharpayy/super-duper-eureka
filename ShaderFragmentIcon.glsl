@@ -10,8 +10,10 @@ layout(std140, binding = 1) uniform MVP_DATA
 };
 
 uniform sampler2D image0;
+uniform uint SelectedModelId;
 
 out vec4 FragColor;
+flat in uint ModelId;
 flat in float checko;
 in vec2 uv_o;
 
