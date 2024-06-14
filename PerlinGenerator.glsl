@@ -161,11 +161,13 @@ double GetHeight(double x, double y)
 void main()
 {
     double val = (GetHeight(double(gl_GlobalInvocationID.x) / map_x, double(gl_GlobalInvocationID.y) / map_y) * 0.5f + 0.5f) * 255.0;
+    uint d_idx = gl_GlobalInvocationID.y * map_y + gl_GlobalInvocationID.x;
     vec3 color = vec3(0.2, 0.3, 0.5);
     for (int i = 0; i < 10; i++) {
 		if (val >= biomes[i].thr) {
 			color = vec3(biomes[i].c1, biomes[i].c2, biomes[i].c3);
-            d[gl_GlobalInvocationID.y * map_y + gl_GlobalInvocationID.x] = biomes[i].type;
+            d[d_idx] = (biomes[i].type << 16) + int(biomes[i].thr);
+            
             break;
 		}
 	}

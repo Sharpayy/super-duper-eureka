@@ -25,7 +25,7 @@ void main()
 		discard;
 
 	if (checko > 0.0)
-		renderColor = vec4(mix(renderColor.xyz, vec3(220.0, 20.0, 60.0) / 255.0, checko / 60.0), 1.0);
+		renderColor = vec4(mix(renderColor.xyz, vec3(220.0, 20.0, 60.0) / 255.0, checko * 1.2 / 200.0), 1.0);
 	
 	FragColor = renderColor;
 }

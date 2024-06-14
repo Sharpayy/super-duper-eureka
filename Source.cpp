@@ -38,7 +38,6 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 {
 	if (e->type == SDL_QUIT)
 		exit(0);
-
 	if (e->type == SDL_KEYDOWN)
 	{
 		if (e->key.keysym.sym == SDLK_e)
