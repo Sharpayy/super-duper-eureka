@@ -2,21 +2,34 @@
 
 layout(local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
 
+
+
+layout(std430, binding = 5) buffer BIOMES
+{
+    int d[];
+};
+
 layout(std140, binding = 1) uniform PERLIN_DATA
 {
-    float d;
-    //double persistence;
-    //double frequency;
-    //double amplitude;
-    //int octaves;
-    //int randomseed;
+    int map_x;
+    int map_y;
+    double persistence;
+    double frequency;
+    double amplitude;
+    int octaves;
+    int randomseed;
 };
+
+/*
+#define map_x 10000
+#define map_y 10000
 
 #define persistence 1.0
 #define frequency 2.5
 #define amplitude 1.0
 #define octaves 7
 #define randomseed 21324
+*/
 
 #define MOUNTAIN 0
 #define HILL 1
@@ -40,7 +53,7 @@ layout(std140, binding = 1) uniform PERLIN_DATA
 #define CREEK 19
 
 struct Biome {
-	float type;
+	int type;
 	float thr;
 	float c1;
 	float c2;
@@ -60,7 +73,7 @@ Biome biomes[10] = Biome[10](
 	Biome( WATER, 0.0, 0, 105, 148 )
 );
 
-layout(binding = 2, rgba8) writeonly uniform image2D WRITE_TEXTURE;
+layout(binding = 2, rgba8) uniform image2D WRITE_TEXTURE;
 
 double Noise(int x, int y)
 {
@@ -147,11 +160,12 @@ double GetHeight(double x, double y)
 
 void main()
 {
-    double val = (GetHeight(double(gl_GlobalInvocationID.x) / 10000.0, double(gl_GlobalInvocationID.y) / 10000.0) * 0.5f + 0.5f) * 255.0;
-    vec3 color;
+    double val = (GetHeight(double(gl_GlobalInvocationID.x) / map_x, double(gl_GlobalInvocationID.y) / map_y) * 0.5f + 0.5f) * 255.0;
+    vec3 color = vec3(0.2, 0.3, 0.5);
     for (int i = 0; i < 10; i++) {
 		if (val >= biomes[i].thr) {
 			color = vec3(biomes[i].c1, biomes[i].c2, biomes[i].c3);
+            d[gl_GlobalInvocationID.y * map_y + gl_GlobalInvocationID.x] = biomes[i].type;
             break;
 		}
 	}

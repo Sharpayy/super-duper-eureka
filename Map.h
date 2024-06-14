@@ -5,6 +5,27 @@
 #include <vector>
 #include <algorithm>
 
+typedef union _int64_2x32
+{
+	int64_t d64;
+	int32_t d32[2];
+
+} int64_2x32;
+
+typedef struct _perlin_data_buffer
+{
+	int map_x;
+	int map_y;
+	double persistence;
+	double frequency;
+	double amplitude;
+	int octaves;
+	int randomseed;
+
+	char pad[8];
+
+} perlin_data_buffer;
+
 
 #define MOUNTAIN 0
 #define HILL 1
@@ -39,9 +60,80 @@
 //Biome{ SAVANNA, 95.5f, (char)0, (char)128, (char)0 },
 //Biome{ TAIGA, 127.0f, (char)0, (char)100, (char)0 }
 
+#define MAP_WIDTH 200
+#define MAP_HEIGHT 200
+#define SCALE 1
+#define MAP_OFFSETX 0
+#define MAP_OFFSETY 0
+#define N_AIRPORTS 1000
+#define N_TOWERS 200
+#define N_AIRCRAFTS 1000
+
 class Map {
 public:
 	Map() = default;
+	Map(float map_w, float map_h, Program pp)
+	{
+		this->map_w = map_w;
+		this->map_h = map_h;
+		data = new char[(int)map_w * (int)map_h];
+
+		glGenBuffers(1, &ssboBiomes);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBiomes);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, (int)map_w * (int)map_h * 4, NULL, GL_STATIC_READ);
+
+		perlin_data_buffer perlinData;
+
+		memset(&perlinData, 1, sizeof(perlin_data_buffer));
+
+		perlinData.map_x = (int)map_w;
+		perlinData.map_y = (int)map_h;
+		perlinData.octaves = 5;
+
+		uint32_t uboPerlinData;
+		glGenBuffers(1, &uboPerlinData);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboPerlinData);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(perlin_data_buffer), &perlinData, GL_STATIC_DRAW);
+
+		map = Texture2D(NULL, (int)map_w, (int)map_h, GL_RGBA, GL_RGBA8);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		
+		glUseProgram(pp.id);
+		map.bind();
+		glBindImageTexture(2, map.id, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+		glBindBuffer(GL_UNIFORM_BUFFER, uboPerlinData);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, ssboBiomes);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBiomes);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboPerlinData);
+
+		printf("call!");
+		glDispatchCompute((int)map_w / 10, (int)map_h / 10, 1);
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+		map.bind();
+		map.genMipmap();
+
+		glDeleteBuffers(1, &uboPerlinData);
+
+		biomes = {
+	Biome{ MOUNTAIN, 191.25f, (char)139, (char)137, (char)137 },
+	Biome{ HILL, 155.5f, (char)100, (char)100, (char)100 },
+	Biome{ GRASSLAND, 76.5f, (char)34, (char)139, (char)34 },
+	Biome{ BEACH, 38.25f, (char)238, (char)214, (char)175 },
+	Biome{ WATER, 0.0f, (char)0, (char)105, (char)148 },
+	Biome{ DESERT, 51.0f, (char)237, (char)201, (char)175 },
+	Biome{ SNOW, 200.0f, (char)255, (char)250, (char)250 },
+	Biome{ SWAMP, 25.5f, (char)47, (char)79, (char)79 },
+	Biome{ TUNDRA, 125.5f, (char)0, (char)90, (char)0 },
+	Biome{ SAVANNA, 100.5f, (char)0, (char)110, (char)0 },
+		};
+		sortBiomes();
+		generateMapData(1.0f, 1.0f, 1.0f, 5, 1);
+
+	}
+
 	Map(float map_w, float map_h, double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed) {
 		this->map_w = map_w;
 		this->map_h = map_h;
@@ -58,7 +150,6 @@ public:
 			Biome{ SWAMP, 25.5f, (char)47, (char)79, (char)79 },
 			Biome{ TUNDRA, 125.5f, (char)0, (char)90, (char)0 },
 			Biome{ SAVANNA, 100.5f, (char)0, (char)110, (char)0 },
-			//Biome{ TAIGA, 153.0f, (char)120, (char)100, (char)0 }
 		};
 		sortBiomes();
 		generateMapData(_persistence, _frequency, _amplitude, _octaves, _randomseed);
@@ -68,6 +159,32 @@ public:
 		map = Texture2D{ data, (int)map_w, (int)map_h , GL_RGB , GL_RGBA };
 		map.genMipmap();
 		delete data;
+	}
+
+	uint8_t* LoadTextureData()
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBiomes);
+		data = (char*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		return (uint8_t*)data;
+	}
+
+	void ReleaseTextureData()
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboBiomes);
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		data = nullptr;
+		glDeleteBuffers(1, &ssboBiomes);
+	}
+
+	uint8_t* GetTile(float x, float y, int c = 3)
+	{
+		float true_x = (x / SCALE) + (MAP_WIDTH  / SCALE / 2.0f);
+		float true_y = (y / SCALE) + (MAP_HEIGHT / SCALE / 2.0f);
+
+		int idx = ((int)true_y * c * map_w) + ((int)true_x * c);
+
+		uint8_t* m = (uint8_t*)data + idx;
+		return m;
 	}
 
 	Texture2D getMap() {
@@ -88,10 +205,25 @@ public:
 	//	return data + idx;
 	//}
 
-	uint8_t getBiomeType(float x, float y, float scale) {
+	uint8_t getBiomeTypeAdv(float x, float y, float scale)
+	{
+		float true_x = (x * scale) + (map_w / 2.0f);
+		float true_y = (y * scale) + (map_h / 2.0f);
+		int idx = ((int)true_y * map_w) + ((int)true_x);
+
+		char* data = getData();
+		return (uint8_t)((int*)(data[idx]));
+	}
+
+	uint8_t getBiomeThrAdv(float x, float y, float scale)
+	{
+
+	}
+
+	uint8_t getBiomeType(float x, float y, float scale, int s = 3) {
 		float true_x = (x * scale) + (map_w  / 2.0f);
 		float true_y = (y * scale) + (map_h  / 2.0f);
-		int idx = ((int)true_y * 3 * map_w) + ((int)true_x * 3);
+		int idx = ((int)true_y * s * map_w) + ((int)true_x * s);
 
 		char c1, c2, c3;
 		char* data = getData();
@@ -106,10 +238,10 @@ public:
 		return -1;
 	}
 
-	uint8_t getBiomeThr(float x, float y, float scale) {
+	uint8_t getBiomeThr(float x, float y, float scale, int s = 3) {
 		float true_x = (x * scale) + (map_w / 2.0f);
 		float true_y = (y * scale) + (map_h / 2.0f);
-		int idx = ((int)true_y * 3 * map_w) + ((int)true_x * 3);
+		int idx = ((int)true_y * s * map_w) + ((int)true_x * s);
 
 		char c1, c2, c3;
 		char* data = getData();
@@ -188,6 +320,8 @@ private:
 	}
 
 	std::vector<Biome> biomes;
+
+	uint32_t ssboBiomes;
 
 	Texture2D map;
 	char* data;

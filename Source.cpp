@@ -142,6 +142,9 @@ int main(int argc, char** argv)
 	shdrPerlinComp.shaderGetDebugInfo(debugInfo, 2048);
 	printf(debugInfo);
 
+	pp.programGetDebugInfo(debugInfo, 2048);
+	printf(debugInfo);
+
 	Program BezierProg = Program();
 	BezierProg.programAddShader(shdrBezVtx.id);
 	BezierProg.programAddShader(shdrBezTes.id);
@@ -199,34 +202,6 @@ int main(int argc, char** argv)
 	uint32_t ulSelectedModel = glGetUniformLocation(iconProgram.id, "SelectedModelId");
 	glUniform1f(ulIconScale, BaseIconScale);
 	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
-
-#define map_gen_size_x 1000
-#define map_gen_size_y 1000
-
-	Texture2D write_texture = Texture2D(NULL, map_gen_size_x, map_gen_size_y, GL_RGBA, GL_RGBA8);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	UniformBufferObject perlin_gen_data = UniformBufferObject();
-	float perlin_gen_values[10];
-
-	perlin_gen_values[0] = 1.0f;
-	perlin_gen_values[1] = 2.0f;
-	perlin_gen_values[9] = 10.0f;
-
-	perlin_gen_data.data(sizeof(float) * 10, perlin_gen_values, GL_STATIC_DRAW);
-
-	glUseProgram(pp.id);
-
-	perlin_gen_data.bindBase(1);
-	//glBindImageTexture(2, write_texture.id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
-	auto f = glGetError();
-
-
-	glDispatchCompute(map_gen_size_x / 10, map_gen_size_y / 10, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
@@ -295,7 +270,7 @@ int main(int argc, char** argv)
 
 	FreeImageData(MapTextureData);
 
-	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, write_texture, 200010);
+	r.newModel(RENDER_MODEL_SQUARE1, Square, simpleProgram, 6, GL_TRIANGLES, Texture2D(), 200010);
 	//r.newModel(RENDER_MODEL_HELICOPTER, Square, iconProgram, 6, GL_TRIANGLES, HeliTexture, 100000);
 
 	RenderableMapSettings MapSetting;
@@ -316,7 +291,7 @@ int main(int argc, char** argv)
 #define OM(A) r.GetObjectMatrix(A)
 
 
-	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(25000.0f, 25000.0f, 0.0f)));
+	uint32_t MapRenderObject = r.newObject(RENDER_MODEL_SQUARE1, scale(mat4(1.0f), vec3(400.0f, 400.0f, 0.0f)));
 	BezierRenderer Bezier = BezierRenderer(BezierProg, 200, 32.0f);
 	//Bezier.UpdateData(p, 4, 0);
 
@@ -341,9 +316,9 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
+	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp};
 
-
+	r.BindMVP();
 	while (true)
 	{
 		evLoopStart = clock();

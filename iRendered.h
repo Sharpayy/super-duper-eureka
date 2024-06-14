@@ -144,6 +144,7 @@ public:
 	Texture2D();
 	Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int);
 	Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location);
+	Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location, GLenum type);
 	void genMipmap();
 	void bind();
 
@@ -425,6 +426,7 @@ public:
 
 	bool IsObjectActive(uint32_t o_id);
 	void NotifyFreeIdx(uint32_t idx, uint32_t mat_);
+	void BindMVP();
 
 
 };

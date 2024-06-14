@@ -16,13 +16,13 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 //extern SDL_Point mousePos;
 
-#define MAP_WIDTH 5000
-#define MAP_HEIGHT 5000
-#define SCALE 1.0f
+#define MAP_WIDTH 10000
+#define MAP_HEIGHT 10000
+#define SCALE 0.25f
 #define MAP_OFFSETX 0
 #define MAP_OFFSETY 0
-#define N_AIRPORTS 4000
-#define N_TOWERS 4000
+#define N_AIRPORTS 400 
+#define N_TOWERS 400
 #define N_AIRCRAFTS 400
 class CollisionDrawer
 {
@@ -45,7 +45,7 @@ public:
 class AManager {
 public:
 	AManager() = default;
-	AManager(RenderGL* r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, Program mapProgram, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo, Camera* camera) {
+	AManager(RenderGL* r, Buffer<GL_ARRAY_BUFFER> vbo, Program program, Program mapProgram, BezierRenderer* br, Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo, Camera* camera, Program m) {
 		this->r = r;
 		this->vbo = vbo;
 		this->ebo = ebo;
@@ -93,11 +93,13 @@ public:
 
 		//addModel(*map.getMap(), 20);
 
-		map = Map{ MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, 1.0, 2.5, 1.0, 7, 21324 };
-
+		map = Map{MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, m};
+		
 		qtAp._alloc(2);
+		map.LoadTextureData();
 		generateStaticObjects(MAP_WIDTH, MAP_HEIGHT);
-		map.createMap();
+		map.ReleaseTextureData();
+		//map.createMap();
 
 		VertexBuffer vao = VertexBuffer();
 		vao.bind();
@@ -111,7 +113,7 @@ public:
 		r->newModel(20, vao, mapProgram, 6, GL_TRIANGLES, map.getMap(), 2);
 		r->newObject(20, glm::scale(glm::mat4(1.0f), glm::fvec3{ MAP_WIDTH / 2.0f, MAP_HEIGHT / 2.0f, 0 }));
 
-
+		return;
 		qtAc._alloc(8);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
@@ -123,7 +125,7 @@ public:
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
-
+		
 		//86�400
 		/*timeScale = 1.0f / 3600.0f;*/
 	}
@@ -170,7 +172,7 @@ public:
 			}
 		}
 
-		
+
 		//int i = 0;
 		//for (auto& ac : AirCraftVec) {
 		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
@@ -274,21 +276,21 @@ private:
 			isTerrainAdapted = true;
 			for (int y = -15; y < 16; y++) {
 				for (int x = -15; x < 16; x++) {
-					biomeType = map.getBiomeType(glm::clamp(position.x + x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y + y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
+					biomeType = map.getBiomeTypeAdv(glm::clamp(position.x + x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y + y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
 					if (biomeType == WATER || biomeType == HILL || biomeType == MOUNTAIN || biomeType == BEACH || biomeType == SWAMP || biomeType == SNOW) {
 						isTerrainAdapted = false;
 						break;
 					}
-					if (x == 0 && y == 0) thr = map.getBiomeThr(glm::clamp(position.x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
+					//if (x == 0 && y == 0) thr = map.getBiomeThr(glm::clamp(position.x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
 				}
 			}
 			if (!isTerrainAdapted) continue;
 			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 200, 200)) {
 				float minNPM = 63;
 				float maxNPM = 173;
-				mval = (thr + generateRandomValueRange(0,20)) * (maxNPM - minNPM) / (255) + minNPM;
+				mval = (thr + generateRandomValueRange(0, 20)) * (maxNPM - minNPM) / (255) + minNPM;
 
-				st = new StaticObj{ position, RENDER_MODEL_AIRPORT, mval};
+				st = new StaticObj{ position, RENDER_MODEL_AIRPORT, mval };
 				AirPortsVec.push_back(st);
 				qtAp._push(st, { st->position.x, st->position.y });
 				r->newObject(st->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ st->position.x, st->position.y, 0.05f }), &st->LongId);
@@ -331,7 +333,7 @@ private:
 		}
 		ac->position = ac->path.getBezierPosition(ac->path.GetCurrentSection(), t);
 		r->BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ac->position.x, ac->position.y, 0.05f + z}) * glm::rotate(glm::mat4(1.0f), angle , glm::vec3(0, 0, 1)), true);
+		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f + z }) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
@@ -365,7 +367,7 @@ private:
 		float z = 0.0003f;
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
-				t = 0.0002f;
+				t = 0.002f;
 
 				handleAirCraftCollision(ac, 60, 60);
 				handleAirCraftsMovement(ac, t, z);
@@ -412,7 +414,7 @@ private:
 	}
 
 private:
-	std::unordered_map<uint8_t,std::vector<AirCraft*>> AirCraftMap;
+	std::unordered_map<uint8_t, std::vector<AirCraft*>> AirCraftMap;
 
 	QT<AirCraft> qtAc = { MAP_WIDTH, MAP_HEIGHT };
 
