@@ -1,7 +1,7 @@
 #include "iRendered.h"
 #include "iAllocators.h"
 
-uint32_t POOLPAGE_MEDIUM_NEW_ALLOCATE = 1;
+uint32_t POOLPAGE_MEDIUM_NEW_ALLOCATE = 8;
 POOLMEDIUMPAGES poolAllocator = POOLMEDIUMPAGES(64, 32, sizeof(RenderModel));
 PerformanceTimer RenderGlobalTimer = GetEmptyTimer();
 
@@ -736,6 +736,12 @@ void RenderGL::SetIdxSpaceValue(uint32_t idx, uint32_t value)
 void RenderGL::NotifyFreeIdx(uint32_t idx, uint32_t mat_)
 {
 	md->stFreeIdSpace.put(DoubleInt32{ idx, mat_ });
+}
+
+void RenderGL::BindMVP()
+{
+	uMVP.bind();
+	uMVP.bindBase(RENDERER_SHADER_MPV_DATA_LOCATION);
 }
 
 Texture2D::Texture2D()

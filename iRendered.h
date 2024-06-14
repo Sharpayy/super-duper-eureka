@@ -426,6 +426,7 @@ public:
 
 	bool IsObjectActive(uint32_t o_id);
 	void NotifyFreeIdx(uint32_t idx, uint32_t mat_);
+	void BindMVP();
 
 
 };
