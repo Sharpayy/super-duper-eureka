@@ -4,7 +4,6 @@
 #include "Camera.h"
 #include <unordered_map>
 
-
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
 #endif
@@ -19,13 +18,12 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 #define MAP_WIDTH 10000
 #define MAP_HEIGHT 10000
-#define SCALE 0.1f
-#define N_AIRPORTS 1.0f
-#define N_TOWERS 1.0f
-#define N_AIRCRAFTS 1.0f
-#define minNPM 63
-#define maxNPM 173
-
+#define SCALE 0.25f
+#define MAP_OFFSETX 0
+#define MAP_OFFSETY 0
+#define N_AIRPORTS 400 
+#define N_TOWERS 400
+#define N_AIRCRAFTS 400
 class CollisionDrawer
 {
 public:
@@ -95,12 +93,13 @@ public:
 
 		//addModel(*map.getMap(), 20);
 
-		//CONFIG
-		map = Map{MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, 1.0, 2.5, 1.0, 7, 21324, m, false};
+		map = Map{MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, m};
 		
 		qtAp._alloc(2);
+		map.LoadTextureData();
 		generateStaticObjects(MAP_WIDTH, MAP_HEIGHT);
 		map.ReleaseTextureData();
+		//map.createMap();
 
 		VertexBuffer vao = VertexBuffer();
 		vao.bind();
@@ -114,20 +113,14 @@ public:
 		r->newModel(20, vao, mapProgram, 6, GL_TRIANGLES, map.getMap(), 2);
 		r->newObject(20, glm::scale(glm::mat4(1.0f), glm::fvec3{ MAP_WIDTH / 2.0f, MAP_HEIGHT / 2.0f, 0 }));
 
-		generator.gen = std::mt19937(generator.rd());
-		//generator.dis = std::uniform_real_distribution<float>(0.0, 1.0);
-
 		qtAc._alloc(8);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
-
-		int aircraftAmount = calculateBestObjectAmount(N_AIRCRAFTS, 2);
-		acData.amount = aircraftAmount;
-		acData.amin = 0.8f;
-		acData.amax = 1.2f;
-		for (int i = 0; i < calculateBestObjectAmount(N_AIRCRAFTS, 2); i++) {
-			ac = generateRandomAirCraft(i % 5, MAP_WIDTH, MAP_HEIGHT);
+		for (int i = 0; i < N_AIRCRAFTS; i++) {
+			ac = generateRandomAirCraft(i % 4 + 1, MAP_WIDTH, MAP_HEIGHT);
+			//ac->path.AddPoint(vec2(120.0f, -140.0f));
+			//ac->path.AddPoint(vec2(0,0));
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
@@ -149,6 +142,27 @@ public:
 		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
 			//FOR PERFORMANCE
 			glm::fvec2 mousePos = camera->getMousePosition();
+			std::cout << mousePos.x << "|" << mousePos.y << "\n";
+
+			//int s, idx;
+			//float x, y;
+			//float bmin, bmax;
+			//s = (MAP_WIDTH / SCALE * 3) - 1;
+
+			//bmax = MAP_WIDTH / 2.0f;
+			//bmin = bmax * -1.0f;
+
+			//idx = 0;
+			//x = (mousePos.x - bmin) * (s) / (bmax - bmin);
+			//y = (s - ((mousePos.y - bmin) * (s - 1) / (bmax - bmin)));
+			//idx = (x * (s - 1) + y) * 3;
+			//int g = idx % 3;
+			//idx -= g;
+
+			////int i = map.getBiomeType(idx);
+			//std::cout << i << std::endl;
+			//std::cout << idx << " " << x << " " << y << std::endl;
+
 			std::vector<AirCraft*> pcaV;
 			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 20, 20, pcaV)) {
 				//std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
@@ -170,8 +184,10 @@ public:
 
 private:
 	int generateRandomValueRange(int min, int max) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> range(min, max);
-		return range(generator.gen);
+		return range(gen);
 	}
 
 	std::pair<glm::fvec2, glm::fvec2> generateRandomPath(float s) {
@@ -254,12 +270,11 @@ private:
 		bool isTerrainAdapted;
 		float thr;
 		uint8_t mval;
-
-		for (i = 0; i < calculateBestObjectAmount(N_AIRPORTS, 4); i++) {
+		for (i = 0; i < N_AIRPORTS; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			isTerrainAdapted = true;
-			for (int y = -50; y < 51; y++) {
-				for (int x = -50; x < 51; x++) {
+			for (int y = -15; y < 16; y++) {
+				for (int x = -15; x < 16; x++) {
 					biomeType = map.getBiomeTypeAdv(glm::clamp(position.x + x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y + y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
 					if (biomeType == WATER || biomeType == HILL || biomeType == MOUNTAIN || biomeType == BEACH || biomeType == SWAMP || biomeType == SNOW) {
 						isTerrainAdapted = false;
@@ -269,7 +284,9 @@ private:
 				}
 			}
 			if (!isTerrainAdapted) continue;
-			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 300, 300)) {
+			if (!qtAp._collidePoint(PointQT{ position.x, position.y }, 200, 200)) {
+				float minNPM = 63;
+				float maxNPM = 173;
 				mval = (thr + generateRandomValueRange(0, 20)) * (maxNPM - minNPM) / (255) + minNPM;
 
 				st = new StaticObj{ position, RENDER_MODEL_AIRPORT, mval };
@@ -279,12 +296,12 @@ private:
 			}
 		}
 
-		for (i = 0; i < calculateBestObjectAmount(N_TOWERS, 4); i++) {
+		for (i = 0; i < N_TOWERS; i++) {
 			position = { generateRandomValueRange(-mapWidth / 2.0f, mapWidth / 2.0f), generateRandomValueRange(-mapHeight / 2.0f, mapHeight / 2.0f) };
 			isTerrainAdapted = true;
-			for (int y = -50; y < 51; y++) {
-				for (int x = -50; x < 51; x++) {
-					biomeType = map.getBiomeTypeAdv(glm::clamp(position.x + x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y + y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
+			for (int y = -15; y < 16; y++) {
+				for (int x = -15; x < 16; x++) {
+					biomeType = map.getBiomeType(glm::clamp(position.x + x, -mapWidth / 2.0f, mapWidth / 2.0f - 1), glm::clamp(position.y + y, -mapHeight / 2.0f, mapHeight / 2.0f - 1), SCALE);
 					if (biomeType == WATER || biomeType == HILL || biomeType == MOUNTAIN || biomeType == BEACH || biomeType == SWAMP || biomeType == SNOW) {
 						isTerrainAdapted = false;
 						break;
@@ -295,6 +312,8 @@ private:
 			if (!isTerrainAdapted) continue;
 			//ADD THIS TO CONFIG
 			if (!qtT._collidePoint(PointQT{ position.x, position.y }, 100, 100) && !qtAp._collidePoint(PointQT{ position.x, position.y }, 100, 100)) {
+				float minNPM = 63;
+				float maxNPM = 173;
 				mval = (thr + generateRandomValueRange(0, 20)) * (maxNPM - minNPM) / (255) + minNPM;
 				st = new StaticObj{ position, RENDER_MODEL_TOWER,  mval };
 				TowersVec.push_back(st);
@@ -322,7 +341,7 @@ private:
 		r->BindActiveModel(LONG_GET_MODEL(ac->LongId));
 
 		//ADD THIS TO SETTINGS
-		float distMax = 200;
+		float distMax = 60;
 		float distMin = distMax;
 		std::vector<AirCraft*> colv;
 		if (qtAc._collide(ac, w, h, colv)) {
@@ -343,15 +362,13 @@ private:
 	void handleAirCraftLogic() {
 		float t = 0.0f;
 
-		int acActualSize = 0;
-		std::vector<AirCraft*> AirCraftsToRemove, newAirCrafts;
+		std::vector<AirCraft*> AirCraftsToRemove;
 		float z = 0.0003f;
 		for (auto planeType : AirCraftMap) {
-			acActualSize += planeType.second.size();
 			for (AirCraft* ac : planeType.second) {
-				t = 0.0002f;
+				t = 0.002f;
 
-				handleAirCraftCollision(ac, 200, 200);
+				handleAirCraftCollision(ac, 60, 60);
 				handleAirCraftsMovement(ac, t, z);
 				if (glm::distance(ac->position, ac->path.destination) < 3.0f) {
 					AirCraftsToRemove.push_back(ac);
@@ -360,30 +377,13 @@ private:
 				z += 0.01f;
 			}
 		}
-		int acmin, acmax;
-		acmin = acData.amin * acData.amount;
-		acmax = acData.amax * acData.amount;
 
-		AirCraft* newAc;
-		int type;
 		for (AirCraft* ac : AirCraftsToRemove) {
 			r->DisableObjectL(ac->LongId);
 			r->deleteObject((*(RENDER_LONG_ID*)&ac->LongId).ModelId, (*(RENDER_LONG_ID*)&ac->LongId).ObjectId);
 			auto& vec = AirCraftMap[ac->getType()];
 			vec.erase(std::remove(vec.begin(), vec.end(), ac), vec.end());
-			acData.chance = 1 - (acActualSize - 1 - acmin) / (float)(acmax - acmin);
-			std::uniform_real_distribution<> dis(0.0, 1.0);
-			if (dis(generator.gen) < (acData.chance + 0.1f)) {
-				type = generateRandomValueRange(0, 4);
-				newAc = generateRandomAirCraft(type, MAP_WIDTH, MAP_HEIGHT);
-				AirCraftMap[newAc->getType()].push_back(newAc);
-				type = generateRandomValueRange(0, 4);
-				newAc = generateRandomAirCraft(type, MAP_WIDTH, MAP_HEIGHT);
-				AirCraftMap[newAc->getType()].push_back(newAc);
-			}
 		}
-
-		std::cout << acActualSize << " " << acData.chance << "\n";
 
 		qtAc._clear();
 		for (auto planeType : AirCraftMap) {
@@ -413,12 +413,6 @@ private:
 	}
 
 private:
-	int calculateBestObjectAmount(float factor, float def) {
-		float exmpl = 1000 * 1000;
-		float amount = MAP_WIDTH * MAP_HEIGHT / exmpl;
-		return amount * factor * def;
-	}
-
 	std::unordered_map<uint8_t, std::vector<AirCraft*>> AirCraftMap;
 
 	QT<AirCraft> qtAc = { MAP_WIDTH, MAP_HEIGHT };
@@ -441,18 +435,5 @@ private:
 	CollisionDrawer cd;
 	uint32_t pathRenderCount;
 
-	struct _generator {
-		std::random_device rd;
-		std::mt19937 gen;
-		//std::uniform_real_distribution<float> dis;
-	} generator;
 	//FOR NOW
-
-	struct aircraftAmountData {
-		int amount;
-		float amin = 0.8f;
-		float amax = 1.2f;
-		//For not mapping it all the time
-		float chance = 0.5f;
-	} acData;
 };

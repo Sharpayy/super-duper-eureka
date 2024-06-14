@@ -3,6 +3,7 @@
 #include "Objects.h"
 #include "Camera.h"
 
+
 using namespace glm;
 #define LOOK_DIRECTION vec3(0.0f, 0.0f, -1.0f)
 
@@ -94,10 +95,10 @@ void CustomEventDispatcher(SDL_Event* e, RenderableMapSettings* MapSettings)
 
 int main(int argc, char** argv)
 {
-	WindowSDL win = WindowSDL("Test", 800, 800, SDL_WINDOW_SHOWN);
+	WindowSDL win = WindowSDL("Test", ScreenWidth, ScreenHeigth, SDL_WINDOW_SHOWN);
 	win.glCreateContext();
 	iinit();
-
+	gltInit();
 
 	const char* srcShaderVertex = GetFileData((char*)"shaderVertex.glsl")->c_str();
 	const char* srcShaderFragment = GetFileData((char*)"shaderFragment.glsl")->c_str();
@@ -317,6 +318,9 @@ int main(int argc, char** argv)
 
 	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp};
 
+	GLTtext* hw = gltCreateText();
+	gltSetText(hw, "Hello World");
+
 	r.BindMVP();
 	while (true)
 	{
@@ -324,12 +328,17 @@ int main(int argc, char** argv)
 		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+		
 		//RenderElapsedTime.TimeStart();
 		amanager.onUpdate();
 		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		Bezier.Render(0);
 		//RenderElapsedTime.TimeEnd();
+		gltBeginDraw();
+		gltColor(1.0f, 0.0f, 0.0f, 1.0f);
+		gltDrawText(hw, (GLfloat*) & (r.MVP.matProjCamera * translate(scale(glm::mat4(1.0f), vec3(50.0f, 50.0f, 1.0f)), vec3(0.0f, 0.0, 1.0f))));
+
+		gltEndDraw();
 
 		if (MapSetting.NeedUpdate == 1)
 		{
