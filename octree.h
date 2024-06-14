@@ -138,8 +138,8 @@ public:
             RectQT ob1;
             PointQT* p = n->p;
             ob1 = RectQT{ PointQT{p->x - w / 2.0f, p->y - h / 2.0f }, w, h };
-            
-            _collideRec(base, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, n, dataV);
+            RectQT rootRect = RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h };
+            _collideRec(base, ob1, rootRect, n, dataV);
             return dataV.size();
         }
         return false;
@@ -148,14 +148,16 @@ public:
     bool _collidePoints(PointQT& p, float w, float h, std::vector<T*>& data) {
         RectQT ob1;
         ob1 = RectQT{ PointQT{p.x - w / 2.0f, p.y - h / 2.0f }, w, h };
-        _collideRec(root, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, root, data);
+        RectQT rootRect = RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h };
+        _collideRec(root, ob1, rootRect, root, data);
         return data.size();
     }
 
     bool _collidePoint(PointQT& p, float w, float h) {
         RectQT ob1;
         ob1 = RectQT{ PointQT{p.x - w / 2.0f, p.y - h / 2.0f }, w, h };
-        return _collideRec(root, ob1, RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h }, root);
+        RectQT rootRect = RectQT{ PointQT{-this->w / 2.0f, -this->h / 2.0f }, this->w, this->h };
+        return _collideRec(root, ob1, rootRect, root);
     }
 
     void _alloc(int depth) {

@@ -200,8 +200,8 @@ int main(int argc, char** argv)
 	glUniform1f(ulIconScale, BaseIconScale);
 	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
 
-#define map_gen_size_x 10000
-#define map_gen_size_y 10000
+#define map_gen_size_x 1000
+#define map_gen_size_y 1000
 
 	Texture2D write_texture = Texture2D(NULL, map_gen_size_x, map_gen_size_y, GL_RGBA, GL_RGBA8);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 	glUseProgram(pp.id);
 
 	perlin_gen_data.bindBase(1);
-	glBindImageTexture(2, write_texture.id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
+	//glBindImageTexture(2, write_texture.id, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
 	auto f = glGetError();
 
 
@@ -341,7 +341,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	//AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
+	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera };
 
 
 	while (true)
@@ -352,8 +352,8 @@ int main(int argc, char** argv)
 
 
 		//RenderElapsedTime.TimeStart();
-		//amanager.onUpdate();
-		r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		amanager.onUpdate();
+		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		Bezier.Render(0);
 		//RenderElapsedTime.TimeEnd();
 

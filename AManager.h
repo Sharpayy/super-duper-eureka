@@ -16,9 +16,9 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 //extern SDL_Point mousePos;
 
-#define MAP_WIDTH 50000
-#define MAP_HEIGHT 50000
-#define SCALE 0.25f
+#define MAP_WIDTH 5000
+#define MAP_HEIGHT 5000
+#define SCALE 1.0f
 #define MAP_OFFSETX 0
 #define MAP_OFFSETY 0
 #define N_AIRPORTS 4000
@@ -365,7 +365,7 @@ private:
 		float z = 0.0003f;
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
-				t = 0.002f;
+				t = 0.0002f;
 
 				handleAirCraftCollision(ac, 60, 60);
 				handleAirCraftsMovement(ac, t, z);
