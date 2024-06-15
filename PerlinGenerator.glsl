@@ -1,3 +1,4 @@
+
 #version 450 core
 
 layout(local_size_x = 10, local_size_y = 10, local_size_z = 1) in;
@@ -166,9 +167,7 @@ void main()
     for (int i = 0; i < 10; i++) {
 		if (val >= biomes[i].thr) {
 			color = vec3(biomes[i].c1, biomes[i].c2, biomes[i].c3);
-            d[d_idx] = biomes[i].type;
-            d[d_idx] = d[d_idx] << 16;
-            d[d_idx] = int(biomes[i].thr);
+            d[d_idx] = (biomes[i].type << 16) + int(biomes[i].thr);
             
             break;
 		}
