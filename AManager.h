@@ -98,7 +98,7 @@ public:
 		//CONFIG
 		map = Map{MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, 1.0, 2.5, 1.0, 7, 21324, m, false};
 		
-		qtAp._alloc(3);
+		qtAp._alloc(2);
 		generateStaticObjects(MAP_WIDTH, MAP_HEIGHT);
 		map.ReleaseTextureData();
 
@@ -126,12 +126,12 @@ public:
 		acData.amount = aircraftAmount;
 		acData.amin = 0.8f;
 		acData.amax = 1.2f;
-		for (int i = 0; i < calculateBestObjectAmount(N_AIRCRAFTS, 2); i++) {
+		for (int i = 0; i < 30; i++) { // calculateBestObjectAmount(N_AIRCRAFTS, 2)
 			ac = generateRandomAirCraft(i % 5, MAP_WIDTH, MAP_HEIGHT);
 			AirCraftMap[ac->getType()].push_back(ac);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
-		
+
 		//86�400
 		/*timeScale = 1.0f / 3600.0f;*/
 	}
@@ -263,7 +263,7 @@ private:
 		vao.enableAttrib(1);
 
 		cd.AddCollisionBuffer(idModel, 1000, vao);
-		r->newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 2000);
+		r->newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
 	}
 
 	void generateStaticObjects(int mapWidth, int mapHeight) {
@@ -478,8 +478,8 @@ private:
 
 	struct aircraftAmountData {
 		int amount;
-		float amin = 0.8f;
-		float amax = 1.2f;
+		float amin = 1.0f;//0.8f;
+			float amax = 1.0f;//1.2f;
 		//For not mapping it all the time
 		float chance = 0.5f;
 	} acData;
