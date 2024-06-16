@@ -3,6 +3,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <queue>
 #include <vector>
+#include <unordered_map>
+#include <string>
 #include "Renderable.h"
 
 typedef struct BezierCurveParametersA
@@ -49,13 +51,14 @@ public:
 
 	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt, bool change = true);
 	float GetCurrentSectionDistance();
+	void resetT() { t = 0; };
 
 private:
 	float t;
 	void UpdatePath(float len = 120.0f);
 };
 
-#define RENDER_MODEL_BALLON 1
+#define RENDER_MODEL_BALLOON 1
 #define RENDER_MODEL_JET 2
 #define RENDER_MODEL_HELICOPTER 3
 #define RENDER_MODEL_GLIDER 4
@@ -77,11 +80,13 @@ public:
 
 	float dist;
 
-	uint8_t getType();
+	uint8_t getType() const;
+	std::string GetName() const;
 	float CalcAngle();
 	void SetAngle(float a);
 
 protected:
+	std::string name;
 	uint8_t type;
 };
 

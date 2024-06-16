@@ -17,9 +17,9 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
 //extern SDL_Point mousePos;
 
-#define MAP_WIDTH 10000
-#define MAP_HEIGHT 10000
-#define SCALE 0.1f
+#define MAP_WIDTH 5000
+#define MAP_HEIGHT 5000
+#define SCALE 0.5f
 #define N_AIRPORTS 1.0f
 #define N_TOWERS 1.0f
 #define N_AIRCRAFTS 1.0f
@@ -74,7 +74,7 @@ public:
 
 		MapTextureData = (uint8_t*)LoadImageData("ballon.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_BALLON);
+		addModel(MapTexture, RENDER_MODEL_BALLOON);
 
 		MapTextureData = (uint8_t*)LoadImageData("jet.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
@@ -98,7 +98,7 @@ public:
 		//CONFIG
 		map = Map{MAP_WIDTH * SCALE, MAP_HEIGHT * SCALE, 1.0, 2.5, 1.0, 7, 21324, m, false};
 		
-		qtAp._alloc(2);
+		qtAp._alloc(3);
 		generateStaticObjects(MAP_WIDTH, MAP_HEIGHT);
 		map.ReleaseTextureData();
 
@@ -117,7 +117,7 @@ public:
 		generator.gen = std::mt19937(generator.rd());
 		//generator.dis = std::uniform_real_distribution<float>(0.0, 1.0);
 
-		qtAc._alloc(8);
+		qtAc._alloc(5);
 		AirCraft* ac;
 		//Ballon* ballon = new Ballon{ {0,0}, {0,0} };
 		//r.newObject(RENDER_MODEL_BALLON, glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }) * BaseIconScaleMatrix, &ballon->LongId);
@@ -142,18 +142,40 @@ public:
 		r->RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		r->RenderSelectedModel(RENDER_MODEL_TOWER);
 		r->RenderSelectedModel(RENDER_MODEL_GLIDER);
-		r->RenderSelectedModel(RENDER_MODEL_BALLON);
+		r->RenderSelectedModel(RENDER_MODEL_BALLOON);
 		r->RenderSelectedModel(RENDER_MODEL_JET);
 		r->RenderSelectedModel(RENDER_MODEL_PLANE);
 
 		if (keyPressedOnce(SDL_SCANCODE_LEFT)) {
 			//FOR PERFORMANCE
 			glm::fvec2 mousePos = camera->getMousePosition();
+			std::cout << mousePos.x << " " << mousePos.y << "\n";
 			std::vector<AirCraft*> pcaV;
 			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 20, 20, pcaV)) {
 				//std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
+				selectedAircraft = pcaV.at(0);
 				br->UpdateData((BezierCurveParameters*)(pcaV.at(0)->path.getData()), pcaV.at(0)->path.path.size(), 0);
 				pathRenderCount = pcaV.at(0)->path.path.size();
+			}
+		}
+		else if (keyPressedOnce(SDL_SCANCODE_RIGHT)) {
+			if (selectedAircraft) {
+				glm::fvec2 mousePos = camera->getMousePosition();
+				//selectedAircraft->path.AddPoint(mousePos);
+				if (selectedAircraft->path.path.size() >= 2) {
+					selectedAircraft->path.path.erase(selectedAircraft->path.path.begin() + 0);
+				}
+				if (selectedAircraft->path.currentPathSection == 1) selectedAircraft->path.currentPathSection--;
+				selectedAircraft->path.resetT();
+				selectedAircraft->path.AddPoint(mousePos);
+				selectedAircraft->path.path.at(0).str_pos = selectedAircraft->position;
+				
+				//selectedAircraft->path.path.at(0).end_pos = selectedAircraft->path.path.at(1).str_pos;
+				//selectedAircraft->path.destination;
+				
+
+				br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
+				pathRenderCount = selectedAircraft->path.path.size();
 			}
 		}
 
@@ -198,7 +220,7 @@ private:
 		switch (idx)
 		{
 		case 0:
-			ballon = new Ballon{ s_e.first, s_e.second, RENDER_MODEL_BALLON };
+			ballon = new Ballon{ s_e.first, s_e.second, RENDER_MODEL_BALLOON };
 			r->newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
@@ -307,7 +329,7 @@ private:
 	void handleAirCraftsMovement(AirCraft*& ac, float t, float z) {
 		//float angle = (ac->getType() != RENDER_MODEL_BALLON) ? (ac->CalcAngle() + 1.57079632679) : 0;
 		float angle = 0;
-		if (ac->getType() != RENDER_MODEL_BALLON) {
+		if (ac->getType() != RENDER_MODEL_BALLOON) {
 			ac->SetAngle(ac->CalcAngle());
 			angle = ac->angle + 1.57079632679;
 		}
@@ -349,7 +371,7 @@ private:
 		for (auto planeType : AirCraftMap) {
 			acActualSize += planeType.second.size();
 			for (AirCraft* ac : planeType.second) {
-				t = 0.0002f;
+				t = 0.0001f;
 
 				handleAirCraftCollision(ac, 200, 200);
 				handleAirCraftsMovement(ac, t, z);
@@ -378,12 +400,16 @@ private:
 				newAc = generateRandomAirCraft(type, MAP_WIDTH, MAP_HEIGHT);
 				AirCraftMap[newAc->getType()].push_back(newAc);
 				type = generateRandomValueRange(0, 4);
+				qtAc._push(newAc, { newAc->position.x, newAc->position.y });
+
 				newAc = generateRandomAirCraft(type, MAP_WIDTH, MAP_HEIGHT);
 				AirCraftMap[newAc->getType()].push_back(newAc);
+				qtAc._push(newAc, { newAc->position.x, newAc->position.y });
+
 			}
 		}
 
-		std::cout << acActualSize << " " << acData.chance << "\n";
+		//std::cout << acActualSize << " " << acData.chance << "\n";
 
 		qtAc._clear();
 		for (auto planeType : AirCraftMap) {
@@ -447,6 +473,8 @@ private:
 		//std::uniform_real_distribution<float> dis;
 	} generator;
 	//FOR NOW
+
+	AirCraft* selectedAircraft = nullptr;
 
 	struct aircraftAmountData {
 		int amount;

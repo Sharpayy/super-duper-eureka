@@ -1,5 +1,13 @@
 ﻿#include "Aircraft.h"
 
+std::unordered_map<uint8_t, std::vector<std::string>> aircraftNames = {
+		{RENDER_MODEL_BALLOON, {"Montgolfier", "Zeppelin NT", "Goodyear Blimp"}},
+		{RENDER_MODEL_JET, {"Boeing 747", "Airbus A320", "Cessna 172", "Concorde", "Gulfstream G650"}},
+		{RENDER_MODEL_HELICOPTER, {"Lockheed Martin F-35 Lightning II", "McDonnell Douglas DC-10", "Bell 206", "Eurocopter AS350"}},
+		{RENDER_MODEL_GLIDER, {"Schleicher ASK 21", "Grob G102 Astir", "Schempp-Hirth Discus"}},
+		{RENDER_MODEL_PLANE, {"Piper PA-28 Cherokee", "Beechcraft King Air", "Antonov An-225 Mriya", "Bombardier Global 7500", "Sukhoi Superjet 100"}}
+};
+
 float AirCraft::CalcAngle()
 {
 	glm::vec2 b = path.getBezierPosition(path.GetCurrentSection(), 0.0f, false);
@@ -12,24 +20,32 @@ AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 	//collisionDist = 0.0f;
+
 	dist = 0;
 }
+
+std::string AirCraft::GetName() const {
+	return this->name;
+}
+
+uint8_t AirCraft::getType() const {
+	return this->type;
+}
+
 
 Glider::Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
+	this->name = aircraftNames[type][rand() % aircraftNames.size()];
 	this->type = type;
-}
-
-uint8_t AirCraft::getType() {
-	return this->type;
 }
 
 Ballon::Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
+	this->name = aircraftNames[type][rand() % aircraftNames.size()];
 	this->type = type;
 }
 
@@ -37,6 +53,7 @@ Helicopter::Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type
 	this->position = position;
 	path = { position, destination };
 
+	this->name = aircraftNames[type][rand() % aircraftNames.size()];
 	this->type = type;
 }
 
@@ -44,6 +61,7 @@ Jet::Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
+	this->name = aircraftNames[type][rand() % aircraftNames.size()];
 	this->type = type;
 }
 
@@ -51,6 +69,7 @@ Plane::Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 	this->position = position;
 	path = { position, destination };
 
+	this->name = aircraftNames[type][rand() % aircraftNames.size()];
 	this->type = type;
 }
 
@@ -139,7 +158,7 @@ void FlyPath::AddPoint(glm::vec2 p)
 	path.at(path.size() - 1).end_pos = p;
 	path.push_back(FlyPathPoint(p, destination));
 	UpdatePath();
-	ValidateAnglesNew();
+	//ValidateAnglesNew();
 }
 
 float Ang(glm::vec2 a, glm::vec2 b)
