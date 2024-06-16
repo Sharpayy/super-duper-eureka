@@ -190,7 +190,7 @@ public:
 
 	uint8_t* GetTile(float x, float y, int c = 3)
 	{
-		float true_x = (x / SCALE) + (MAP_WIDTH  / SCALE / 2.0f);
+		float true_x = (x / SCALE) + (MAP_WIDTH / SCALE / 2.0f);
 		float true_y = (y / SCALE) + (MAP_HEIGHT / SCALE / 2.0f);
 
 		int idx = ((int)true_y * c * map_w) + ((int)true_x * c);
@@ -273,7 +273,7 @@ private:
 		int size = map_w * map_h;
 		char* tileMap = new char[size * 3];
 
-		PerlinNoiseGenerator perlin{ persistence, frequency, amplitude, octaves, randomseed,};
+		PerlinNoiseGenerator perlin{ persistence, frequency, amplitude, octaves, randomseed, };
 		double dx, dy;
 		int idx;
 		double val;
@@ -283,7 +283,7 @@ private:
 				//idx = (y * map_w + x) * 3;
 				idx = (y * 3 * map_w) + (x * 3);
 
-				dx = (double)x / (double)map_w ;
+				dx = (double)x / (double)map_w;
 				dy = (double)y / (double)map_h;
 				//float val = (perlin.perlin2DConfigurable(x, y, seed, scale, octaves, lacunarity, persistence) * 0.5f + 0.5f) * 255.0f;
 				val = (perlin.GetHeight(dx, dy) * 0.5f + 0.5f) * r;

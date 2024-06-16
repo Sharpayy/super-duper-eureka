@@ -320,8 +320,9 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat)
 	rmd->render = true;
 	rmd->objectId = spaceIdIdx.a;
 
-	md->objects.push_back(rmd);
-	*(md->objectsId.base_ptr + spaceIdIdx.a) = md->objects.c_size - 1;
+	//md->objects.push_back(rmd);
+	*md->objects.atp(spaceIdIdx.a) = rmd;
+	*(md->objectsId.base_ptr + spaceIdIdx.a) = md->objAmount;
 	md->objAmount++;
 	md->activeObjects++;
 
@@ -352,8 +353,9 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat, uint64_
 	rmd->render = true;
 	rmd->objectId = spaceIdIdx.a;
 
-	md->objects.push_back(rmd);
-	*(md->objectsId.base_ptr + spaceIdIdx.a) = md->objects.c_size - 1;
+	//md->objects.push_back(rmd);
+	*md->objects.atp(spaceIdIdx.a) = rmd;
+	*(md->objectsId.base_ptr + spaceIdIdx.a) = md->objAmount;
 	md->objAmount++;
 	md->activeObjects++;
 
@@ -405,18 +407,18 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 	uint32_t cObjectIdx = MapToObjectIdx(o_id);
 	uint32_t sObjectIdx = MapObjectToSpaceIdx(cObjectIdx);
 
-	RenderModelDetails* obj = GetMdObject(sObjectIdx);
+	RenderModelDetails* obj = GetMdObject(o_id);
 
 	NotifyFreeIdx(o_id, obj->matrixId);
-	md->objects.del_last();
-	md->objAmount--;
+	//md->objects.del_last();
+	//md->objAmount--;
+	//poolAllocator.freeAlignedMemory(obj);
 
 	if (lastObjIdx == cObjectIdx)
 		return;
 
 	SwapObjectIdxOrder(sObjectIdx, MapObjectToSpaceIdx(lastObjIdx));
 	SwapInBufferIdxOrder(cObjectIdx, lastObjIdx);
-
 }
 
 void RenderGL::SyncObjectMatrix(RENDER_MODEL_ID o_id)
@@ -428,7 +430,7 @@ void RenderGL::SyncObjectMatrix(RENDER_MODEL_ID o_id)
 
 void RenderGL::SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat, bool just_in_vram = false)
 {
-	RenderModelDetails* obj = GetMdObject(MapObjectToSpaceIdx(MapToObjectIdx(o_id)));
+	RenderModelDetails* obj = GetMdObject(o_id);
 	if (just_in_vram == 0)
 		obj->model = mat;
 
@@ -441,7 +443,7 @@ void RenderGL::SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat, bool just_in
 
 glm::mat4 RenderGL::GetObjectMatrix(RENDER_MODEL_ID o_id)
 {
-	return GetMdObject(MapObjectToSpaceIdx(MapToObjectIdx(o_id)))->model;
+	return GetMdObject(o_id)->model;
 }
 
 void RenderGL::EnableObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
@@ -738,22 +740,15 @@ void RenderGL::NotifyFreeIdx(uint32_t idx, uint32_t mat_)
 	md->stFreeIdSpace.put(DoubleInt32{ idx, mat_ });
 }
 
-void RenderGL::BindMVP()
-{
-	uMVP.bind();
-	uMVP.bindBase(RENDERER_SHADER_MPV_DATA_LOCATION);
-}
-
 Texture2D::Texture2D()
 {
 	id = 0;
 }
 
-Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int, uint32_t bind_location, GLenum type)
+void RenderGL::BindMVP()
 {
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
-	glTexImage2D(GL_TEXTURE_2D, 0, data_int, x, y, 0, data_type, type, data);
+	uMVP.bind();
+	uMVP.bindBase(RENDERER_SHADER_MPV_DATA_LOCATION);
 }
 
 Texture2D::Texture2D(void* data, int x, int y, GLenum data_type, GLenum data_int)
