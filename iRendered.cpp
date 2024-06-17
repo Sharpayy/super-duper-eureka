@@ -411,7 +411,7 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 	NotifyFreeIdx(o_id, obj->matrixId);
 	//md->objects.del_last();
-	//md->objAmount--;
+	md->objAmount--;
 	//poolAllocator.freeAlignedMemory(obj);
 
 	if (lastObjIdx == cObjectIdx)

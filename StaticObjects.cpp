@@ -8,6 +8,14 @@ StaticObj::StaticObj(glm::fvec2 position, uint8_t type, uint8_t npm) {
 	this->npm = npm;
 }
 
+glm::fvec2 StaticObj::getPosition() {
+	return this->position;
+}
+
 uint8_t StaticObj::getType() {
 	return this->type;
+}
+
+uint32_t StaticObj::getNpm() {
+	return this->npm;
 }

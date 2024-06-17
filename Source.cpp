@@ -318,13 +318,13 @@ int main(int argc, char** argv)
 
 	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp };
 
-	AircraftRenderData ard = AircraftRenderData();
+	//AircraftRenderData ard = AircraftRenderData();
 
-	ard.SetColor(0.7f, 0.2f, 0.1f);
-	ard.SetModel("Boeing 737");
-	ard.SetBrand("Lot");
-	ard.SetHeigth(6100.0f);
-	ard.SetSpeed(640.0f);
+	//ard.SetColor(0.7f, 0.2f, 0.1f);
+	//ard.SetModel("Boeing 737");
+	//ard.SetBrand("Lot");
+	//ard.SetHeigth(6100.0f);
+	//ard.SetSpeed(640.0f);
 
 	r.BindMVP();
 	while (true)
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
 		amanager.onUpdate();
 		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		Bezier.Render(0);
-		ard.Render(r.MVP.matProjCamera);
+		//ard.Render(r.MVP.matProjCamera);
 		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)

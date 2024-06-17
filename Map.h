@@ -48,27 +48,6 @@ typedef struct _perlin_data_buffer
 #define POND 18
 #define CREEK 19
 
-//Biome{ MOUNTAIN, 191.25f, (char)139, (char)137, (char)137 },
-//Biome{ HILL, 153.5f, (char)100, (char)100, (char)100 },
-//Biome{ GRASSLAND, 76.5f, (char)34, (char)139, (char)34 },
-//Biome{ BEACH, 38.25f, (char)238, (char)214, (char)175 },
-//Biome{ WATER, 0.0f, (char)0, (char)105, (char)148 },
-//Biome{ DESERT, 51.0f, (char)237, (char)201, (char)175 },
-//Biome{ FOREST, 102.0f, (char)34, (char)139, (char)34 },
-//Biome{ SWAMP, 25.5f, (char)47, (char)79, (char)79 },
-//Biome{ TUNDRA, 140.5f, (char)176, (char)196, (char)222 },
-//Biome{ SAVANNA, 95.5f, (char)0, (char)128, (char)0 },
-//Biome{ TAIGA, 127.0f, (char)0, (char)100, (char)0 }
-
-#define MAP_WIDTH 200
-#define MAP_HEIGHT 200
-#define SCALE 1
-#define MAP_OFFSETX 0
-#define MAP_OFFSETY 0
-#define N_AIRPORTS 1000
-#define N_TOWERS 200
-#define N_AIRCRAFTS 1000
-
 class Map {
 public:
 	Map() = default;
@@ -188,16 +167,7 @@ public:
 		data = nullptr;
 	}
 
-	uint8_t* GetTile(float x, float y, int c = 3)
-	{
-		float true_x = (x / SCALE) + (MAP_WIDTH / SCALE / 2.0f);
-		float true_y = (y / SCALE) + (MAP_HEIGHT / SCALE / 2.0f);
 
-		int idx = ((int)true_y * c * map_w) + ((int)true_x * c);
-
-		uint8_t* m = (uint8_t*)data + idx;
-		return m;
-	}
 
 	Texture2D getMap() {
 		return map;
@@ -263,11 +233,6 @@ public:
 		return -1;
 	}
 
-	bool isTileAccesible(int idx, float min, float max) {
-		float val = data[idx];
-		return (min >= min && val <= max);
-	}
-
 private:
 	void generateMapData(double persistence, double frequency, double amplitude, int octaves, int randomseed) {
 		int size = map_w * map_h;
@@ -299,8 +264,6 @@ private:
 				}
 			}
 		}
-		//map = Texture2D{ tileMap, (int)map_w, (int)map_h , GL_RGB , GL_RGBA };
-		//map.genMipmap();
 		data = tileMap;
 	}
 

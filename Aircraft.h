@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <string>
 #include "Renderable.h"
+#include "StaticObjects.h"
 #include <string>
 
 #include <glew.h>
@@ -103,7 +104,7 @@ public:
 
 	void SetColor(float r, float g, float b)
 	{
-		gltColor(r, g, b, 1.0f);
+		gltColor(r, g, b, 0.0f);
 	}
 
 	void SetBrand(const char* v)
@@ -125,6 +126,14 @@ public:
 		std::string s = std::string("Height: ");
 		s.append(std::to_string(v));
 		gltSetText(height, s.c_str());
+	}
+
+	void SetPosition(glm::fvec2 position) {
+		this->posit = position;
+	}
+
+	void SetScale(glm::fvec2 scale) {
+		this->scale = scale;
 	}
 
 private:
@@ -165,6 +174,7 @@ public:
 	std::vector<FlyPathPoint> path;
 	uint32_t currentPathSection;
 	glm::vec2 destination;
+	glm::vec2 start;
 	
 	FlyPath() = default;
 	FlyPath(glm::vec2 start, glm::vec2 end);
@@ -181,12 +191,15 @@ public:
 	BezierCurveParametersA* getData();
 	BezierCurveParametersA* GetCurrentSection();
 
-	glm::fvec2 getBezierPosition(BezierCurveParametersA* param, float dt, bool change = true);
+	glm::fvec2 getBezierPosition2D(BezierCurveParametersA* param, float dt, bool change = true);
+	float getBezierPosition1D(BezierCurveParametersA* param, float dt);
+	
 	float GetCurrentSectionDistance();
 	void resetT() { t = 0; };
 
 private:
 	float t;
+	float ht;
 	void UpdatePath(float len = 120.0f);
 };
 
@@ -196,26 +209,32 @@ private:
 #define RENDER_MODEL_GLIDER 4
 #define RENDER_MODEL_PLANE 5
 
+#define minNPM 9448.8f
+#define maxNPM 12801.6f
+
 class AirCraft : public Renderable {
 public:
 	AirCraft() = default;
-	AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	//AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 
 	void onUpdate();
 
 	glm::fvec2 position;
 	FlyPath path;
+
 	float distanceToGround;
 	float speed;
 	float acceleration;
 	float angle;
 
 	float dist;
+	bool collide = false;
 
 	uint8_t getType() const;
 	std::string GetName() const;
 	float CalcAngle();
 	void SetAngle(float a);
+	BezierCurveParametersA* heightData;
 
 protected:
 	std::string name;
@@ -225,29 +244,34 @@ protected:
 class Ballon : public AirCraft {
 public:
 	Ballon() = default;
-	Ballon(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
 };
 
 class Jet : public AirCraft {
 public:
 	Jet() = default;
-	Jet(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
 };
 
 class Helicopter : public AirCraft {
 public:
 	Helicopter() = default;
-	Helicopter(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
 };
 
 class Glider : public AirCraft {
 public:
 	Glider() = default;
-	Glider(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
 };
 
 class Plane : public AirCraft {
 public:
 	Plane() = default;
-	Plane(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
+	Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
 };
+
+//MISC
+float normalizeVal(float value, float minValue, float maxValue);
+
+float mapValueToRange(float normalizedValue, float minValue, float maxValue);

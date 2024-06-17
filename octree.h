@@ -61,6 +61,7 @@ template <typename T>
 class QT {
 public:
     QT() {
+        this->amount = 0;
         root = new Node{};
         _alloc(1);
         //root->_init(nullptr, { w,h });
@@ -68,6 +69,7 @@ public:
     QT(int w, int h)  {
         this->w = w;
         this->h = h;
+        this->amount = 0;
         root = new Node{};
         _alloc(1);
         //root->_init(nullptr, new PointQT{});
@@ -81,6 +83,10 @@ public:
         }
     }
 
+    int _getSize() {
+        return this->amount;
+    }
+
     void _push(T* data, PointQT p) {
         Node* n = root;
         RectQT rect = { PointQT{-w / 2.0f, -h / 2.0f}, w / 2.0f, h / 2.0f };
@@ -90,6 +96,7 @@ public:
             _calcDim(rect, dir, n);
         }
         n->_init(data, new PointQT{ p.x, p.y });
+        amount++;
     }
 
     uint8_t getDirection(const PointQT& p, const RectQT& rect) {
@@ -166,6 +173,7 @@ public:
 
     void _clear() {
         _removeDataRec(root);
+        amount = 0;
     }
 
     std::vector<T*> _rebuild(T* data) {
@@ -306,6 +314,7 @@ private:
             RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
             if (ob1.intersect(ob2)) {
                 data.push_back(n->data);
+                return;
             }
         }
         RectQT nRect;
@@ -356,6 +365,7 @@ private:
         }
     }
 
+    int amount;
     Node* root;
     int w, h;
 };

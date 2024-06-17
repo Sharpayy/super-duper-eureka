@@ -20,7 +20,7 @@ void WindowSDL::glCreateContext()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 	glContext = SDL_GL_CreateContext(win);
-	SDL_GL_SetSwapInterval(0);
+	SDL_GL_SetSwapInterval(1);
 }
 
 void WindowSDL::handleEvents()
