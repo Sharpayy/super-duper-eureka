@@ -163,7 +163,6 @@ public:
 	FlyPathPoint() = default;
 	FlyPathPoint(glm::vec2 p);
 	FlyPathPoint(glm::vec2 s, glm::vec2 d);
-
 };
 
 typedef unsigned long long uint64_t;
@@ -187,7 +186,7 @@ public:
 	void ValidateAngles(uint32_t idx);
 	void ValidateAnglesNew();
 	void UpdateAngles(uint32_t idx);
-
+	float BezierSingleLength(BezierCurveParametersA* data);
 	BezierCurveParametersA* getData();
 	BezierCurveParametersA* GetCurrentSection();
 
@@ -214,7 +213,7 @@ private:
 
 class AirCraft : public Renderable {
 public:
-	AirCraft() = default;
+	AirCraft();
 	//AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type);
 
 	void onUpdate();

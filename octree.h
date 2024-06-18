@@ -314,7 +314,6 @@ private:
             RectQT ob2 = RectQT{ PointQT{n->p->x - ob1.width / 2.0f, n->p->y - ob1.height / 2.0f}, ob1.width, ob1.height };
             if (ob1.intersect(ob2)) {
                 data.push_back(n->data);
-                return;
             }
         }
         RectQT nRect;

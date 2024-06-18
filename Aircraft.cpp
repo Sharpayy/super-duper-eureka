@@ -16,6 +16,12 @@ float AirCraft::CalcAngle()
 	return atan2f(angle.y, angle.x);
 }
 
+AirCraft::AirCraft() {
+	this->speed = 1.0f;
+}
+ 
+
+
 //AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 //	this->position = position;
 //	path = { position, destination };
@@ -190,6 +196,41 @@ float FlyPath::getBezierPosition1D(BezierCurveParametersA* param, float dt) {
 	return Height;
 }
 
+float FlyPath::BezierSingleLength(BezierCurveParametersA* data) {
+	glm::fvec2 p0, p1, p2, p3;
+	float l0, l1, l2, l3;
+	p0 = data->str_pos - data->mid0_pos;
+	p1 = data->mid1_pos - data->mid0_pos;
+	p3 = data->end_pos - data->mid1_pos;
+	
+	l0 = glm::length(p0);
+	l1 = glm::length(p1);
+	l3 = glm::length(p3);
+	if (l0 > 0) p0 /= l0;
+	if (l1 > 0) p1 /= l1;
+	if (l3 > 0) p3 /= l3;
+
+	p2 = -p1;
+	float a = fabs(glm::dot(p0, p1)) + fabs(glm::dot(p2, p3));
+	if (a > 1.98f || l0 + l1 + l3 < (4 - a) * 8) return l0 + l1 + l3;
+
+	glm::fvec2 bl[4];
+	glm::fvec2 br[4];
+
+	bl[0] = data->str_pos;
+	bl[1] = (data->str_pos + data->mid0_pos) * 0.5f;
+
+	glm::fvec2 mid = (data->mid0_pos + data->mid1_pos) * 0.5f;
+
+	bl[2] = (bl[1] + mid) * 0.5f;
+	br[3] = data->end_pos;
+	br[2] = (data->mid1_pos + data->end_pos) * 0.5f;
+	br[1] = (br[2] + mid) * 0.5f;
+	br[0] = (br[1] + bl[2]) * 0.5f;
+	bl[3] = br[0];
+
+	return BezierSingleLength((BezierCurveParametersA*)&bl) + BezierSingleLength((BezierCurveParametersA*)&br);
+}
 
 
 float FlyPath::GetCurrentSectionDistance()

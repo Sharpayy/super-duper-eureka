@@ -326,6 +326,15 @@ int main(int argc, char** argv)
 	//ard.SetHeigth(6100.0f);
 	//ard.SetSpeed(640.0f);
 
+	std::unordered_map<uint8_t, float> dupa;
+	dupa[0] = 1.24f;
+
+	if (dupa.find(0) == dupa.end()) {
+		int i = 0;
+	}
+	else {
+		int d = 0;
+	}
 	r.BindMVP();
 	while (true)
 	{
