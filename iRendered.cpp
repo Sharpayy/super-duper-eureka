@@ -348,6 +348,9 @@ RENDER_OBJECT_ID RenderGL::newObject(uint32_t id_model, glm::mat4 s_mat, uint64_
 
 	DoubleInt32 spaceIdIdx = GetFreeMdIdSpaceIndex();
 
+	if (spaceIdIdx.a != spaceIdIdx.b)
+		__debugbreak();
+	
 	rmd->matrixId = spaceIdIdx.b;
 	rmd->model = s_mat;
 	rmd->render = true;
@@ -409,9 +412,12 @@ void RenderGL::deleteObject(uint32_t m_id, RENDER_OBJECT_ID o_id)
 
 	RenderModelDetails* obj = GetMdObject(o_id);
 
+	if (obj->objectId != o_id)
+		__debugbreak();
+
 	NotifyFreeIdx(o_id, obj->matrixId);
-	//md->objects.del_last();
 	md->objAmount--;
+	//md->objects.del_last();
 	//poolAllocator.freeAlignedMemory(obj);
 
 	if (lastObjIdx == cObjectIdx)
@@ -431,6 +437,10 @@ void RenderGL::SyncObjectMatrix(RENDER_MODEL_ID o_id)
 void RenderGL::SetObjectMatrix(RENDER_MODEL_ID o_id, glm::mat4 mat, bool just_in_vram = false)
 {
 	RenderModelDetails* obj = GetMdObject(o_id);
+
+	if (obj->objectId != o_id)
+		__debugbreak();
+
 	if (just_in_vram == 0)
 		obj->model = mat;
 
