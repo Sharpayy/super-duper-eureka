@@ -1,14 +1,12 @@
-﻿#include "StaticObjects.h"
+﻿﻿#include "octree.h"
+#include "StaticObjects.h"
 #include "Map.h"
 #include "Camera.h"
 #include <unordered_map>
-#include "octree.h"
 
 
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
-#else
-#define AM_ASSERT(A)
 #endif
 
 extern glm::mat4 BaseIconScaleMatrix;
@@ -22,11 +20,9 @@ void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 #define MAP_WIDTH 5000
 #define MAP_HEIGHT 5000
 #define SCALE 0.5f
-#define N_AIRPORTS 1.0f
+#define N_AIRPORTS 3.0f
 #define N_TOWERS 1.0f
-#define N_AIRCRAFTS 0.8f
-
-#define MAX_FLYING_OBJS 5 * 500
+#define N_AIRCRAFTS 1.0f
 
 class CollisionDrawer
 {
@@ -57,13 +53,12 @@ public:
 		this->camera = camera;
 
 		pathRenderCount = 0;
+		int aircraftAmount = calculateBestObjectAmount(N_AIRCRAFTS, 2);
+		cd = CollisionDrawer(500 * 5);
 
 		int x, y, c;
 		Texture2D MapTexture;
 		uint8_t* MapTextureData;
-
-		int aircraftAmount = calculateBestObjectAmount(N_AIRCRAFTS, 2);
-		cd = CollisionDrawer(MAX_FLYING_OBJS);
 
 		//AIRCRAFTS
 		MapTextureData = (uint8_t*)LoadImageData("helicopter.png", 1, &c, &x, &y);
@@ -89,16 +84,16 @@ public:
 		//STATIC OBJECTS
 		MapTextureData = (uint8_t*)LoadImageData("airport.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_AIRPORT, false);
+		addModel(MapTexture, RENDER_MODEL_AIRPORT);
 
 		MapTextureData = (uint8_t*)LoadImageData("tower.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_TOWER, false);
+		addModel(MapTexture, RENDER_MODEL_TOWER);
 
 		//ETC
 		MapTextureData = (uint8_t*)LoadImageData("Explosion.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_EXPLOSION, false);
+		addModel(MapTexture, RENDER_MODEL_EXPLOSION);
 
 		//addModel(*map.getMap(), 20);
 
@@ -130,10 +125,14 @@ public:
 		acData.amount = aircraftAmount;
 		acData.amin = 0.8f;
 		acData.amax = 1.2f;
+
 		for (int i = 0; i < aircraftAmount; i++) {
 			ac = generateRandomAirCraft(i % 5, MAP_WIDTH, MAP_HEIGHT);
 			AirCraftMap[ac->getType()].push_back(ac);
 			wMap[ac->LongId] = ac;
+			//float sag = glm::distance(ac->path.path.at(ac->path.currentPathSection).str_pos, ac->path.path.at(ac->path.currentPathSection).end_pos);
+			//float g = ac->path.BezierSingleLength(ac->path.getData());
+			//float h = 1.0f;
 			//qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
 
@@ -145,7 +144,7 @@ public:
 		/*timeScale = 1.0f / 3600.0f;*/
 	}
 
-	void onUpdate(float dt) {
+	void onUpdate() {
 		r->RenderSelectedModel(RENDER_MODEL_MAP);
 		r->RenderSelectedModel(RENDER_MODEL_EXPLOSION);
 		r->RenderSelectedModel(RENDER_MODEL_AIRPORT);
@@ -229,8 +228,9 @@ public:
 		//	i += ac->path.path.size();
 		//}
 
-		handleAirCraftLogic(dt);
-		std::cout << wMap.size() << "\n";
+		handleAirCraftLogic();
+		//std::cout << wMap.size() << "\n";
+		if (selectedAircraft) std::cout << selectedAircraft->collide << "\n";
 	}
 
 private:
@@ -264,27 +264,22 @@ private:
 		{
 		case 0:
 			ballon = new Ballon{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_BALLOON };
-			ballon->speed = generateRandomValueRange(550, 560);
 			r->newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
 			jet = new Jet{ s_e.first->getPosition(), (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_JET };
-			jet->speed = generateRandomValueRange(550, 900);
 			r->newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
 			helicopter = new Helicopter{ s_e.first->getPosition(),  (float)s_e.first->getNpm(),  s_e.second, RENDER_MODEL_HELICOPTER };
-			helicopter->speed = generateRandomValueRange(550, 900);
 			r->newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
 			plane = new Plane{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_PLANE };
-			plane->speed = generateRandomValueRange(550, 900);
 			r->newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
 			glider = new Glider{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_GLIDER };
-			glider->speed = generateRandomValueRange(550, 900);
 			r->newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
 			return (AirCraft*)glider;
 
@@ -293,7 +288,7 @@ private:
 		}
 	}
 
-	void addModel(Texture2D texture, uint8_t idModel, bool cl = true) {
+	void addModel(Texture2D texture, uint8_t idModel) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -310,9 +305,7 @@ private:
 		vao.enableAttrib(0);
 		vao.enableAttrib(1);
 
-		if (cl)
-			cd.AddCollisionBuffer(MAX_FLYING_OBJS / 5.0f, vao);
-
+		cd.AddCollisionBuffer(500, vao);
 		r->newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
 	}
 
@@ -384,7 +377,10 @@ private:
 			ac->SetAngle(ac->CalcAngle());
 			angle = ac->angle + 1.57079632679;
 		}
-		ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), ac->speed * t / ac->path.GetCurrentSectionFlyDistance() / 10.0);
+		//ac->path.BezierSingleLength((BezierCurveParametersA*)&(ac->path.path.at(ac->path.currentPathSection)));
+		float g = ac->path.BezierSingleLength(ac->path.GetCurrentSection()); //glm::distance(ac->path.path.at(ac->path.currentPathSection).str_pos, ac->path.path.at(ac->path.currentPathSection).end_pos);
+		float d = ac->speed / g;
+		ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), d);
 		if (ac->path.path.size() == 1) {
 			maxDist = glm::distance(ac->path.start, ac->path.destination);
 
@@ -415,7 +411,7 @@ private:
 		float distMax = 200;
 		float distMin = distMax;
 		std::vector<AirCraft*> colv;
-		bool exist = false;
+		bool same = false;
 		bool collide = false;
 		if (qtAc._getSize()) {
 			collide = qtAc._collidePoints(PointQT{ ac->position.x, ac->position.y }, w, h, colv);
@@ -427,35 +423,48 @@ private:
 		}
 		if (collide) {
 
-			if ((wMap.find(ac->LongId) == wMap.end())) {
-
+			if (!elementExist(ac->LongId)) {
 				for (auto& col : colv) {
-					if (col == ac) { exist = true; break; }
-					dist = glm::distance(ac->position, col->position);
-					if (dist < distMin) {
-						distMin = dist;
+					if (col != ac) {
+						dist = glm::distance(ac->position, col->position);
+						if (dist < distMin) {
+							distMin = dist;
+						}
+						dist = glm::distance(ac->distanceToGround, col->distanceToGround);
+						if (dist < hd) hd = dist;
 					}
-					dist = glm::distance(ac->distanceToGround, col->distanceToGround);
-					if (dist < hd) hd = dist;
+					else same = true;
 				}
-				ac->dist = distMin;
+				if (selectedAircraft) {
+					int g = 1;
+				}
+				if (!same || (colv.size() >= 2)) {
+					ac->dist = distMin;
 
-				if (ac->dist < 1.5f && hd < 40.0f && !exist) {
-					r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
-					std::cout << "BOOM KURWA\n";
+					if (ac->dist < 1.5f && hd < 40.0f) {
+						//r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
+						std::cout << "BOOM KURWA\n";
+					}
+					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, distMax - distMin, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+					ac->collide = true;
 				}
-				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 5, distMax - distMin, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+				else ac->collide = false;
 			}
-
 		}
-		else if (!(wMap.find(ac->LongId) == wMap.end())) {
-			wMap.erase(ac->LongId);
-			qtAc._push(ac, { ac->position.x, ac->position.y });
-			cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 5, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		else {
+			if (elementExist(ac->LongId)) {
+				wMap.erase(ac->LongId);
+				qtAc._push(ac, { ac->position.x, ac->position.y });
+			}
+			else {
+				ac->collide = false;
+				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+			};
 		}
 	}
 
-	void handleAirCraftLogic(float dt) {
+	void handleAirCraftLogic() {
+		float t = 0.0f;
 		cd.FetchCollisionBuffer();
 		int acActualSize = 0;
 		std::vector<AirCraft*> AirCraftsToRemove, newAirCrafts;
@@ -463,12 +472,13 @@ private:
 		for (auto planeType : AirCraftMap) {
 			acActualSize += planeType.second.size();
 			for (AirCraft* ac : planeType.second) {
+				t = 0.00015f;
 				//t = (generateRandomValueRange(1, 9) / 10000.0f);
 
 				handleAirCraftCollision(ac, 200, 200);
 
 				if (wMap.find(ac->LongId) == wMap.end()) {
-					handleAirCraftsMovement(ac, dt, z);
+					handleAirCraftsMovement(ac, t, z);
 				}
 				if (glm::distance(ac->position, ac->path.destination) < 5.0f) {
 					AirCraftsToRemove.push_back(ac);
@@ -477,12 +487,9 @@ private:
 				z += 0.01f;
 			}
 		}
-		cd.SendCollisionBuffer();
 		int acmin, acmax;
 		acmin = acData.amin * acData.amount;
 		acmax = acData.amax * acData.amount;
-
-		if (selectedAircraft) std::cout << selectedAircraft->distanceToGround << "\n";
 
 		AirCraft* newAc;
 		int type;
@@ -517,9 +524,7 @@ private:
 		qtAc._clear();
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
-				ac->collide = false;
-
-				if (wMap.find(ac->LongId) == wMap.end()) {
+				if (!elementExist(ac->LongId)) {
 					qtAc._push(ac, { ac->position.x, ac->position.y });
 				}
 			}
@@ -551,6 +556,10 @@ private:
 		float exmpl = 1000 * 1000;
 		float amount = MAP_WIDTH * MAP_HEIGHT / exmpl;
 		return amount * factor * def;
+	}
+
+	bool elementExist(uint64_t id) {
+		return !(wMap.find(id) == wMap.end());
 	}
 
 	std::unordered_map<uint8_t, std::vector<AirCraft*>> AirCraftMap;
