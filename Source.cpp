@@ -309,6 +309,7 @@ int main(int argc, char** argv)
 	PerformanceTimer RenderElapsedTime = PerformanceTimer();
 	RenderElapsedTime.Reset();
 	LoopElapsedTime.Reset();
+	clock_t loopTime = 0;
 	uint32_t lp = 0;
 
 	int64_t SumRenderTime = 0;
@@ -344,16 +345,11 @@ int main(int argc, char** argv)
 	while (true)
 	{
 		evLoopStart = clock();
-		LoopElapsedTime.Start();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		//RenderElapsedTime.TimeStart();
-		amanager.onUpdate();
-		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
+		amanager.onUpdate(loopTime / 1000.0);
 		Bezier.Render(0);
-		//ard.Render(r.MVP.matProjCamera);
-		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
 		{
@@ -369,21 +365,18 @@ int main(int argc, char** argv)
 
 
 		lp++;
-		LoopElapsedTime.End();
 		evCurrTime += clock() - evLoopStart;
-		SumRenderTime += RenderElapsedTime.GetElapsedTime();
+		loopTime = clock() - evLoopStart;
 		if (evCurrTime >= evLoopTimeTarget)
 		{
 
 			char NewWinTitle[64];
-			SumRenderTime = SumRenderTime / 1000000;
 
-			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
+			snprintf(NewWinTitle, 64, "Fps: %d", lp);
 
 			SDL_SetWindowTitle(win.win, NewWinTitle);
 			evCurrTime -= evLoopTimeTarget;
 			lp = 0;
-			SumRenderTime = 0;
 		}
 
 	}
