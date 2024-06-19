@@ -68,7 +68,7 @@ public:
         _alloc(1);
         //root->_init(nullptr, { w,h });
     }
-    QT(int w, int h)  {
+    QT(int w, int h) {
         this->w = w;
         this->h = h;
         this->amount = 0;
@@ -191,7 +191,7 @@ private:
         Node() = default;
         void _init(T* data = nullptr, PointQT* p = nullptr) {
             for (int i = 0; i < 4; i++) {
-                if(nodes[i] == NULL) nodes[i] = new Node{};
+                if (nodes[i] == NULL) nodes[i] = new Node{};
             }
             this->p = p;
             this->data = data;
@@ -262,7 +262,7 @@ private:
             }
 
             for (int i = 0; i < 4; i++) {
-                if(!finallNode) _findNodeRec(n->nodes[i], data, finallNode, base);
+                if (!finallNode) _findNodeRec(n->nodes[i], data, finallNode, base);
             }
         }
     }
@@ -322,7 +322,7 @@ private:
         for (uint8_t i = 0; i < 4; i++) {
             nRect = nodeRect;
             _calcDim(nRect, i);
-                
+
             if (n->nodes[i]->data) {
                 if (nRect.intersect(ob1)) {
                     _collideRec(n->nodes[i], ob1, nRect, ignore, data);

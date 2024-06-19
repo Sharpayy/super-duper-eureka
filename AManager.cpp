@@ -92,7 +92,7 @@ void CollisionDrawer::UpdateSingleData(uint32_t offset, float c, uint32_t idx)
 	if (mappedArray == nullptr)
 		return;
 
-	if (idx > 10000)
+	if (offset + idx > size)
 		return;
 
 	mappedArray[offset + idx] = c;

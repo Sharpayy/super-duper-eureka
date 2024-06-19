@@ -1,4 +1,4 @@
-﻿﻿#include "octree.h"
+﻿#include "octree.h"
 #include "StaticObjects.h"
 #include "Map.h"
 #include "Camera.h"
@@ -84,16 +84,16 @@ public:
 		//STATIC OBJECTS
 		MapTextureData = (uint8_t*)LoadImageData("airport.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_AIRPORT);
+		addModel(MapTexture, RENDER_MODEL_AIRPORT, false);
 
 		MapTextureData = (uint8_t*)LoadImageData("tower.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_TOWER);
+		addModel(MapTexture, RENDER_MODEL_TOWER, false);
 
 		//ETC
 		MapTextureData = (uint8_t*)LoadImageData("Explosion.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_EXPLOSION);
+		addModel(MapTexture, RENDER_MODEL_EXPLOSION, false);
 
 		//addModel(*map.getMap(), 20);
 
@@ -144,7 +144,9 @@ public:
 		/*timeScale = 1.0f / 3600.0f;*/
 	}
 
-	void onUpdate() {
+	void onUpdate(float dt) {
+		handleAirCraftLogic(dt);
+		glFinish();
 		r->RenderSelectedModel(RENDER_MODEL_MAP);
 		r->RenderSelectedModel(RENDER_MODEL_EXPLOSION);
 		r->RenderSelectedModel(RENDER_MODEL_AIRPORT);
@@ -227,8 +229,6 @@ public:
 		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
 		//	i += ac->path.path.size();
 		//}
-
-		handleAirCraftLogic();
 		//std::cout << wMap.size() << "\n";
 		if (selectedAircraft) std::cout << selectedAircraft->collide << "\n";
 	}
@@ -288,7 +288,7 @@ private:
 		}
 	}
 
-	void addModel(Texture2D texture, uint8_t idModel) {
+	void addModel(Texture2D texture, uint8_t idModel, bool cl = true) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -305,7 +305,9 @@ private:
 		vao.enableAttrib(0);
 		vao.enableAttrib(1);
 
-		cd.AddCollisionBuffer(500, vao);
+		if (cl)
+			cd.AddCollisionBuffer(500, vao);
+
 		r->newModel(idModel, vao, program, 6, GL_TRIANGLES, texture, 1000);
 	}
 
@@ -379,7 +381,8 @@ private:
 		}
 		//ac->path.BezierSingleLength((BezierCurveParametersA*)&(ac->path.path.at(ac->path.currentPathSection)));
 		float g = ac->path.BezierSingleLength(ac->path.GetCurrentSection()); //glm::distance(ac->path.path.at(ac->path.currentPathSection).str_pos, ac->path.path.at(ac->path.currentPathSection).end_pos);
-		float d = ac->speed / g;
+		//float d = ac->speed / g * t;
+		float d = 600.0f / 60000.0f * t;
 		ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), d);
 		if (ac->path.path.size() == 1) {
 			maxDist = glm::distance(ac->path.start, ac->path.destination);
@@ -463,8 +466,7 @@ private:
 		}
 	}
 
-	void handleAirCraftLogic() {
-		float t = 0.0f;
+	void handleAirCraftLogic(float t) {
 		cd.FetchCollisionBuffer();
 		int acActualSize = 0;
 		std::vector<AirCraft*> AirCraftsToRemove, newAirCrafts;
@@ -472,7 +474,6 @@ private:
 		for (auto planeType : AirCraftMap) {
 			acActualSize += planeType.second.size();
 			for (AirCraft* ac : planeType.second) {
-				t = 0.00015f;
 				//t = (generateRandomValueRange(1, 9) / 10000.0f);
 
 				handleAirCraftCollision(ac, 200, 200);
@@ -487,6 +488,7 @@ private:
 				z += 0.01f;
 			}
 		}
+		cd.SendCollisionBuffer();
 		int acmin, acmax;
 		acmin = acData.amin * acData.amount;
 		acmax = acData.amax * acData.amount;
@@ -529,7 +531,6 @@ private:
 				}
 			}
 		}
-		cd.SendCollisionBuffer();
 	}
 
 	void rotateAirCraft(AirCraft* airCraft, glm::fvec3 destination) {
