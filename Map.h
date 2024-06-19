@@ -250,7 +250,6 @@ private:
 
 				dx = (double)x / (double)map_w;
 				dy = (double)y / (double)map_h;
-				//float val = (perlin.perlin2DConfigurable(x, y, seed, scale, octaves, lacunarity, persistence) * 0.5f + 0.5f) * 255.0f;
 				val = (perlin.GetHeight(dx, dy) * 0.5f + 0.5f) * r;
 				val = glm::clamp(val, 0.0, 255.0);
 

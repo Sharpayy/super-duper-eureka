@@ -4,7 +4,6 @@
 #include "Camera.h"
 #include <unordered_map>
 
-
 #ifdef _DEBUG
 #define AM_ASSERT(A) assert(A)
 #endif
@@ -15,14 +14,43 @@ extern bool wasPressed[SDL_NUM_SCANCODES];
 
 void AddCollisionBuffera(VertexBuffer vao, Buffer<GL_ARRAY_BUFFER> obj);
 
-//extern SDL_Point mousePos;
-
-#define MAP_WIDTH 5000
-#define MAP_HEIGHT 5000
+#define MAP_WIDTH 10000
+#define MAP_HEIGHT 10000
 #define SCALE 0.5f
-#define N_AIRPORTS 3.0f
+#define N_AIRPORTS 1.0f
 #define N_TOWERS 1.0f
 #define N_AIRCRAFTS 1.0f
+
+struct _config {
+	float n_airports;
+	float n_towers;
+	float n_aircrafts;
+
+	//Map
+	float map_width;
+	float map_height;
+	float scale;
+	float CPU;
+	double persistence;
+	double frequency;
+	double amplitude;
+	int octaves;
+	int randomseed;
+
+	//Aircrafts Height
+	float aircraftsMinNPM;
+	float aircraftsMaxNPM;
+	//StaticObjects Height
+	float staticObjectsMinNPM;
+	float staticObjectsMaxNPM;
+
+	//Collision
+	float collsiionDetectionDistance;
+	float collisionResponseHeight;
+	float airportsCollisionDistance;
+	float towersCollisionDistance;
+
+};
 
 class CollisionDrawer
 {
@@ -170,7 +198,7 @@ public:
 			glm::fvec2 mousePos = camera->getMousePosition();
 			std::cout << mousePos.x << " " << mousePos.y << "\n";
 			std::vector<AirCraft*> pcaV;
-			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 20, 20, pcaV)) {
+			if (qtAc._collidePoints(PointQT{ mousePos.x, mousePos.y }, 50, 50, pcaV)) {
 				//std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
 				selectedAircraft = pcaV.at(0);
 				ard.SetModel(selectedAircraft->GetName().c_str());
@@ -193,22 +221,30 @@ public:
 				qtAp._collidePoints(PointQT{ mousePos.x, mousePos.y }, 10.0f, 10.0f, objects);
 				if (objects.size()) {
 					obj = objects.at(0);
+					selectedAircraft->path.path.at(selectedAircraft->path.currentPathSection).str_pos = selectedAircraft->position;
 					selectedAircraft->path.ChangeDestinatination(obj->getPosition());
+					selectedAircraft->path.resetT();
+
 					selectedAircraft->heightData->str_pos = { 0, selectedAircraft->distanceToGround };
 					selectedAircraft->heightData->end_pos = { 0, obj->getNpm() };
+					br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
+					pathRenderCount = selectedAircraft->path.path.size();
 				}
 				else {
 					qtT._collidePoints(PointQT{ mousePos.x, mousePos.y }, 10.0f, 10.0f, objects);
 					if (objects.size()) {
 						obj = objects.at(0);
+						selectedAircraft->path.path.at(selectedAircraft->path.currentPathSection).str_pos = selectedAircraft->position;
 						selectedAircraft->path.ChangeDestinatination(obj->getPosition());
+						selectedAircraft->path.resetT();
 						selectedAircraft->heightData->str_pos = { 0, selectedAircraft->distanceToGround };
 						selectedAircraft->heightData->end_pos = { 0, obj->getNpm() };
+						br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
+						pathRenderCount = selectedAircraft->path.path.size();
 					}
 				}
 
 				if (!obj) {
-					//selectedAircraft->path.AddPoint(mousePos);
 					if (selectedAircraft->path.path.size() >= 2) {
 						selectedAircraft->path.path.erase(selectedAircraft->path.path.begin() + 0);
 					}
@@ -216,22 +252,12 @@ public:
 					selectedAircraft->path.resetT();
 					selectedAircraft->path.AddPoint(mousePos);
 					selectedAircraft->path.path.at(0).str_pos = selectedAircraft->position;
-				}
 					br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
 					pathRenderCount = selectedAircraft->path.path.size();
+				}
 			}
 		}
-
-
-		//int i = 0;
-		//for (auto& ac : AirCraftVec) {
-		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
-		//	i += ac->path.path.size();
-		//}
-		if (selectedAircraft) std::cout << selectedAircraft->collide << " -2 \n";
 		handleAirCraftLogic();
-		//std::cout << wMap.size() << "\n";
-		if(selectedAircraft) std::cout << selectedAircraft->collide << " -3 \n";
 	}
 
 private:
@@ -371,21 +397,13 @@ private:
 		}
 	}
 
-	void handleAirCraftsMovement(AirCraft*& ac, float t, float z) {
-		//float angle = (ac->getType() != RENDER_MODEL_BALLON) ? (ac->CalcAngle() + 1.57079632679) : 0;
-		float dt, maxDist = 0, angle = 0;
-		if (ac->getType() != RENDER_MODEL_BALLOON) {
-			ac->SetAngle(ac->CalcAngle());
-			angle = ac->angle + 1.57079632679;
-		}
-		//ac->path.BezierSingleLength((BezierCurveParametersA*)&(ac->path.path.at(ac->path.currentPathSection)));
-		float g = ac->path.BezierSingleLength(ac->path.GetCurrentSection()); //glm::distance(ac->path.path.at(ac->path.currentPathSection).str_pos, ac->path.path.at(ac->path.currentPathSection).end_pos);
-		float d = ac->speed / g;
-		ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), d);
-		if (ac->path.path.size() == 1) {
-			maxDist = glm::distance(ac->path.start, ac->path.destination);
+	void handleAirCraftsMovement(AirCraft*& ac, float dt) {
+		float maxDist = 0, angle;
 
-		}
+		float pathDistance = ac->path.BezierSingleLength(ac->path.GetCurrentSection());
+		float t = ac->speed / pathDistance;
+		ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), t);
+		if (ac->path.path.size() == 1) maxDist = glm::distance(ac->path.start, ac->path.destination);
 		else {
 			int i;
 			for (i = 0; i < ac->path.path.size() - 1; i++) {
@@ -394,43 +412,30 @@ private:
 			maxDist += glm::distance(ac->path.path.at(i).str_pos, ac->path.path.at(i).end_pos);
 		}
 
-		//dt = glm::clamp(1.0f - (glm::distance(ac->position, ac->path.destination) / glm::distance(ac->path.start, ac->path.destination)), 0.0f, 1.0f);
-		dt = glm::clamp(1.0f - (glm::distance(ac->position, ac->path.destination) / maxDist), 0.0f, 1.0f);
-
-		ac->distanceToGround = ac->path.getBezierPosition1D(ac->heightData, dt);
+		t = glm::clamp(1.0f - (glm::distance(ac->position, ac->path.destination) / maxDist), 0.0f, 1.0f);
+		angle = getAirCraftAngle(ac);
+		ac->distanceToGround = ac->path.getBezierPosition1D(ac->heightData, t);
 		r->BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f + z }) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
+		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f}) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
 	}
 
-	void handleAirCraftCollision(AirCraft*& ac, float w, float h) {
+	void handleAirCraftCollision(AirCraft*& ac, float w, float h, std::vector<AirCraft*>& AircraftsToRemove) {
 		AirCraft* acr = nullptr;
 		// ultra slow shit
-		r->BindActiveModel(LONG_GET_MODEL(ac->LongId));
-
 		//ADD THIS TO SETTINGS
 		float dist, hd = 1000;
 		float distMax = 200;
 		float distMin = distMax;
 		std::vector<AirCraft*> colv;
 		bool same = false;
-		bool collide = false;
-		if (ac == selectedAircraft) {
-		//if(rand() % 3 == 0 ) 
-			//cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, glm::clamp(distMax - 100, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
-		}
-		if (qtAc._getSize()) {
-			if (ac  == selectedAircraft) {
-				int g = 1;
-			}
-			collide = qtAc._collidePoints(PointQT{ac->position.x, ac->position.y}, w, h, colv);
-		}
+		bool collide;
+		if (qtAc._getSize()) collide = qtAc._collidePoints(PointQT{ac->position.x, ac->position.y}, w, h, colv);
 		else {
 			wMap.erase(ac->LongId);
 			collide = qtAc._collidePoints(PointQT{ ac->position.x, ac->position.y }, w, h, colv);
 			qtAc._push(ac, { ac->position.x, ac->position.y });
 		}
 		if (collide) {
-			
 			if (!elementExist(ac->LongId)) {
 				for (auto& col : colv) {
 					if (col != ac) {
@@ -445,22 +450,15 @@ private:
 				}
 				ac->dist = distMin;
 				if ((colv.size() >= 2)) {
-
-					if (ac->dist < 1.5f && hd < 40.0f) {
+					if (ac->dist < 1.5f && hd < 50.0f) {
 						r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
+						AircraftsToRemove.push_back(ac);
 						std::cout << "BOOM KURWA\n";
 					}
-					if (ac == selectedAircraft) std::cout << "CHUJ DOBRY\n";
 					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, glm::clamp(distMax - distMin, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
-					ac->collide = true;
 				}
-				else if (same) {
-					ac->collide = false;
-					if (ac == selectedAircraft) std::cout << "CHUJ\n";
-
-					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
-				}
-				else ac->collide = false;
+				else if (same) cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+				
 			}
 		}
 		else {
@@ -468,12 +466,6 @@ private:
 				wMap.erase(ac->LongId);
 				qtAc._push(ac, { ac->position.x, ac->position.y });
 			}
-			else {
-				/*ac->collide = false;
-				if (ac == selectedAircraft) std::cout << "CHUJ\n";
-
-				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));*/
-			};
 		}
 	}
 
@@ -482,23 +474,18 @@ private:
 		cd.FetchCollisionBuffer();
 		int acActualSize = 0;
 		std::vector<AirCraft*> AirCraftsToRemove, newAirCrafts;
-		float z = 0.00009f;
 		for (auto planeType : AirCraftMap) {
 			acActualSize += planeType.second.size();
 			for (AirCraft* ac : planeType.second) {
-				t = 0.00015f;
-				//t = (generateRandomValueRange(1, 9) / 10000.0f);
+				r->BindActiveModel(LONG_GET_MODEL(ac->LongId));
 
-				handleAirCraftCollision(ac, 200, 200);
-				
+				handleAirCraftCollision(ac, 200, 200, AirCraftsToRemove);
 				if (!elementExist(ac->LongId)) {
-					handleAirCraftsMovement(ac, t, z);
+					handleAirCraftsMovement(ac, t);
 				}
 				if (glm::distance(ac->position, ac->path.destination) < 5.0f) {
 					AirCraftsToRemove.push_back(ac);
 				}
-
-				z += 0.01f;
 			}
 		}
 		int acmin, acmax;
@@ -512,7 +499,6 @@ private:
 				br->UpdateData(nullptr, 0, 0);
 				selectedAircraft = nullptr;
 			}
-
 			r->DisableObjectL(ac->LongId);
 			r->deleteObject((*(RENDER_LONG_ID*)&ac->LongId).ModelId, (*(RENDER_LONG_ID*)&ac->LongId).ObjectId);
 			auto& vec = AirCraftMap[ac->getType()];
@@ -533,8 +519,6 @@ private:
 			}
 		}
 
-		//std::cout << acActualSize << " " << acData.chance << "\n";
-
 		qtAc._clear();
 		for (auto planeType : AirCraftMap) {
 			for (AirCraft* ac : planeType.second) {
@@ -546,11 +530,13 @@ private:
 		cd.SendCollisionBuffer();
 	}
 
-	void rotateAirCraft(AirCraft* airCraft, glm::fvec3 destination) {
-		//FOR NOW
-		//float angle = 0;
-
-		//airCraft->angle;
+	float getAirCraftAngle(AirCraft* ac) {
+		float angle = 0;
+		if (ac->getType() != RENDER_MODEL_BALLOON) {
+			ac->SetAngle(ac->CalcAngle());
+			angle = ac->angle + 1.57079632679;
+		}
+		return angle;
 	}
 
 	bool keyPressedOnce(SDL_Scancode key) {
