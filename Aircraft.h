@@ -202,11 +202,11 @@ private:
 	void UpdatePath(float len = 120.0f);
 };
 
-#define RENDER_MODEL_BALLOON 1
-#define RENDER_MODEL_JET 2
-#define RENDER_MODEL_HELICOPTER 3
-#define RENDER_MODEL_GLIDER 4
-#define RENDER_MODEL_PLANE 5
+#define RENDER_MODEL_BALLOON 0
+#define RENDER_MODEL_JET 1
+#define RENDER_MODEL_HELICOPTER 2
+#define RENDER_MODEL_GLIDER 3
+#define RENDER_MODEL_PLANE 4
 
 #define minNPM 9448.8f
 #define maxNPM 12801.6f

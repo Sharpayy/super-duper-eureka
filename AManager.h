@@ -61,14 +61,6 @@ public:
 		uint8_t* MapTextureData;
 
 		//AIRCRAFTS
-		MapTextureData = (uint8_t*)LoadImageData("helicopter.png", 1, &c, &x, &y);
-		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_HELICOPTER);
-
-		MapTextureData = (uint8_t*)LoadImageData("glider.png", 1, &c, &x, &y);
-		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
-		addModel(MapTexture, RENDER_MODEL_GLIDER);
-
 		MapTextureData = (uint8_t*)LoadImageData("ballon.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 		addModel(MapTexture, RENDER_MODEL_BALLOON);
@@ -76,6 +68,14 @@ public:
 		MapTextureData = (uint8_t*)LoadImageData("jet.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
 		addModel(MapTexture, RENDER_MODEL_JET);
+
+		MapTextureData = (uint8_t*)LoadImageData("helicopter.png", 1, &c, &x, &y);
+		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
+		addModel(MapTexture, RENDER_MODEL_HELICOPTER);
+
+		MapTextureData = (uint8_t*)LoadImageData("glider.png", 1, &c, &x, &y);
+		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
+		addModel(MapTexture, RENDER_MODEL_GLIDER);
 
 		MapTextureData = (uint8_t*)LoadImageData("plane.png", 1, &c, &x, &y);
 		MapTexture = Texture2D(MapTextureData, x, y, GL_RGBA, GL_RGBA, GL_TEXTURE0);
@@ -145,6 +145,7 @@ public:
 	}
 
 	void onUpdate() {
+		if (selectedAircraft) std::cout << selectedAircraft->collide << " -1 \n";
 		r->RenderSelectedModel(RENDER_MODEL_MAP);
 		r->RenderSelectedModel(RENDER_MODEL_EXPLOSION);
 		r->RenderSelectedModel(RENDER_MODEL_AIRPORT);
@@ -227,10 +228,10 @@ public:
 		//	br->UpdateData((BezierCurveParameters*)(ac->path.getData()), ac->path.path.size(), i);
 		//	i += ac->path.path.size();
 		//}
-
+		if (selectedAircraft) std::cout << selectedAircraft->collide << " -2 \n";
 		handleAirCraftLogic();
 		//std::cout << wMap.size() << "\n";
-		if(selectedAircraft) std::cout << selectedAircraft->collide << "\n";
+		if(selectedAircraft) std::cout << selectedAircraft->collide << " -3 \n";
 	}
 
 private:
@@ -413,7 +414,14 @@ private:
 		std::vector<AirCraft*> colv;
 		bool same = false;
 		bool collide = false;
+		if (ac == selectedAircraft) {
+		//if(rand() % 3 == 0 ) 
+			//cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, glm::clamp(distMax - 100, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+		}
 		if (qtAc._getSize()) {
+			if (ac  == selectedAircraft) {
+				int g = 1;
+			}
 			collide = qtAc._collidePoints(PointQT{ac->position.x, ac->position.y}, w, h, colv);
 		}
 		else {
@@ -435,18 +443,22 @@ private:
 					}
 					else same = true;
 				}
-				if (selectedAircraft) {
-					int g = 1;
-				}
-				if (!same || (colv.size() >= 2)) {
-					ac->dist = distMin;
+				ac->dist = distMin;
+				if ((colv.size() >= 2)) {
 
 					if (ac->dist < 1.5f && hd < 40.0f) {
-						//r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
+						r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
 						std::cout << "BOOM KURWA\n";
 					}
-					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, distMax - distMin, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+					if (ac == selectedAircraft) std::cout << "CHUJ DOBRY\n";
+					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, glm::clamp(distMax - distMin, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 					ac->collide = true;
+				}
+				else if (same) {
+					ac->collide = false;
+					if (ac == selectedAircraft) std::cout << "CHUJ\n";
+
+					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 				}
 				else ac->collide = false;
 			}
@@ -457,8 +469,10 @@ private:
 				qtAc._push(ac, { ac->position.x, ac->position.y });
 			}
 			else {
-				ac->collide = false;
-				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
+				/*ac->collide = false;
+				if (ac == selectedAircraft) std::cout << "CHUJ\n";
+
+				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));*/
 			};
 		}
 	}
@@ -477,7 +491,7 @@ private:
 
 				handleAirCraftCollision(ac, 200, 200);
 				
-				if (wMap.find(ac->LongId) == wMap.end()) {
+				if (!elementExist(ac->LongId)) {
 					handleAirCraftsMovement(ac, t, z);
 				}
 				if (glm::distance(ac->position, ac->path.destination) < 5.0f) {

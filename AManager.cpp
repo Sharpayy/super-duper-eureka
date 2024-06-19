@@ -83,7 +83,8 @@ void CollisionDrawer::FetchCollisionBuffer()
 void CollisionDrawer::SendCollisionBuffer()
 {
 	buffer.bind();
-	buffer.data(size * 4, mappedArray, GL_DYNAMIC_DRAW);
+	//buffer.data(size * 4, mappedArray, GL_DYNAMIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, size * 4, mappedArray);
 }
 
 void CollisionDrawer::UpdateSingleData(uint32_t offset, float c, uint32_t idx)
