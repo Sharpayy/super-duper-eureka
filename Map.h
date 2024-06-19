@@ -51,7 +51,7 @@ typedef struct _perlin_data_buffer
 class Map {
 public:
 	Map() = default;
-	Map(float map_w, float map_h, double persistence, double frequency, double amplitude, int octaves, int randomseed, Program pp, bool CPU = true)
+	Map(float map_w, float map_h, double persistence, double frequency, double amplitude, uint8_t octaves, uint32_t randomseed, Program pp, bool CPU = true)
 	{
 		this->map_w = map_w;
 		this->map_h = map_h;
@@ -123,27 +123,6 @@ public:
 		}
 	}
 
-	//Map(float map_w, float map_h, double persistence, double frequency, double amplitude, int octaves, int randomseed) {
-	//	this->map_w = map_w;
-	//	this->map_h = map_h;
-	//	data = nullptr;
-
-	//	biomes = {
-	//		Biome{ MOUNTAIN, 191.25f, (char)139, (char)137, (char)137 },
-	//		Biome{ HILL, 155.5f, (char)100, (char)100, (char)100 },
-	//		Biome{ GRASSLAND, 76.5f, (char)34, (char)139, (char)34 },
-	//		Biome{ BEACH, 38.25f, (char)238, (char)214, (char)175 },
-	//		Biome{ WATER, 0.0f, (char)0, (char)105, (char)148 },
-	//		Biome{ DESERT, 51.0f, (char)237, (char)201, (char)175 },
-	//		Biome{ SNOW, 200.0f, (char)255, (char)250, (char)250 },
-	//		Biome{ SWAMP, 25.5f, (char)47, (char)79, (char)79 },
-	//		Biome{ TUNDRA, 125.5f, (char)0, (char)90, (char)0 },
-	//		Biome{ SAVANNA, 100.5f, (char)0, (char)110, (char)0 },
-	//	};
-	//	sortBiomes();
-	//	generateMapData(persistence, frequency, amplitude, octaves, randomseed);
-	//}
-
 	void createMap() {
 		map = Texture2D{ data, (int)map_w, (int)map_h , GL_RGB , GL_RGBA };
 		map.genMipmap();
@@ -176,16 +155,6 @@ public:
 	char* getData() {
 		return data;
 	}
-
-	//char* GetTile(float x, float y, float scale)
-	//{
-	//	float true_x = (x * scale) + (map_w * scale / 2.0f);
-	//	float true_y = (y * scale) + (map_h * scale / 2.0f);
-
-	//	int idx = ((int)true_y * 3 * map_w) + ((int)true_x * 3);
-
-	//	return data + idx;
-	//}
 
 	uint8_t getBiomeTypeAdv(float x, float y, float scale)
 	{
@@ -234,7 +203,7 @@ public:
 	}
 
 private:
-	void generateMapData(double persistence, double frequency, double amplitude, int octaves, int randomseed) {
+	void generateMapData(double persistence, double frequency, double amplitude, uint8_t octaves, uint32_t randomseed) {
 		int size = map_w * map_h;
 		char* tileMap = new char[size * 3];
 

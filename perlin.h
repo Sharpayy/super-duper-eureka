@@ -1,11 +1,12 @@
 #pragma once
+#include <iostream>
 
 class PerlinNoiseGenerator {
 public:
 
     // Constructor
     PerlinNoiseGenerator();
-    PerlinNoiseGenerator(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed);
+    PerlinNoiseGenerator(double _persistence, double _frequency, double _amplitude, uint8_t _octaves, uint32_t _randomseed);
 
     // Get Height
     double GetHeight(double x, double y) const;
@@ -14,11 +15,11 @@ public:
     double Persistence() const { return persistence; }
     double Frequency()   const { return frequency; }
     double Amplitude()   const { return amplitude; }
-    int    Octaves()     const { return octaves; }
-    int    RandomSeed()  const { return randomseed; }
+    uint8_t    Octaves()     const { return octaves; }
+    uint32_t   RandomSeed()  const { return randomseed; }
 
     // Set
-    void Set(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed);
+    void Set(double _persistence, double _frequency, double _amplitude, uint8_t _octaves, uint32_t _randomseed);
 
     void SetPersistence(double _persistence) { persistence = _persistence; }
     void SetFrequency(double _frequency) { frequency = _frequency; }
@@ -34,5 +35,6 @@ private:
     double Noise(int x, int y) const;
 
     double persistence, frequency, amplitude;
-    int octaves, randomseed;
+    uint8_t octaves; 
+    uint32_t randomseed;
 };

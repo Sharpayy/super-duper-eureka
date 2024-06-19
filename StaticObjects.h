@@ -1,15 +1,12 @@
 #pragma once
-
 #include <glm.hpp>
 #include "Renderable.h"
+#include "Config.h"
 
 #define RENDER_MODEL_AIRPORT 12
 #define RENDER_MODEL_TOWER 13
 #define RENDER_MODEL_EXPLOSION 14
 #define RENDER_MODEL_MAP 15
-
-#define staticMinNPM 67
-#define staticMaxNPM 157
 
 struct StaticObj : public Renderable {
 	StaticObj();

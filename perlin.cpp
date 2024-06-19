@@ -9,7 +9,7 @@ PerlinNoiseGenerator::PerlinNoiseGenerator()
     randomseed = 0;
 }
 
-PerlinNoiseGenerator::PerlinNoiseGenerator(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed)
+PerlinNoiseGenerator::PerlinNoiseGenerator(double _persistence, double _frequency, double _amplitude, uint8_t _octaves, uint32_t _randomseed)
 {
     persistence = _persistence;
     frequency = _frequency;
@@ -18,7 +18,7 @@ PerlinNoiseGenerator::PerlinNoiseGenerator(double _persistence, double _frequenc
     randomseed = 2 + _randomseed * _randomseed;
 }
 
-void PerlinNoiseGenerator::Set(double _persistence, double _frequency, double _amplitude, int _octaves, int _randomseed)
+void PerlinNoiseGenerator::Set(double _persistence, double _frequency, double _amplitude, uint8_t _octaves, uint32_t _randomseed)
 {
     persistence = _persistence;
     frequency = _frequency;

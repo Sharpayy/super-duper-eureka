@@ -208,8 +208,12 @@ private:
 #define RENDER_MODEL_GLIDER 3
 #define RENDER_MODEL_PLANE 4
 
-#define minNPM 9448.8f
-#define maxNPM 12801.6f
+struct acHeightData {
+	float stMinH;
+	float stMaxH;
+	float acMinH;
+	float acMaxH;
+};
 
 class AirCraft : public Renderable {
 public:
@@ -243,31 +247,31 @@ protected:
 class Ballon : public AirCraft {
 public:
 	Ballon() = default;
-	Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
+	Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data);
 };
 
 class Jet : public AirCraft {
 public:
 	Jet() = default;
-	Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
+	Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data);
 };
 
 class Helicopter : public AirCraft {
 public:
 	Helicopter() = default;
-	Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
+	Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data);
 };
 
 class Glider : public AirCraft {
 public:
 	Glider() = default;
-	Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
+	Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data);
 };
 
 class Plane : public AirCraft {
 public:
 	Plane() = default;
-	Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type);
+	Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data);
 };
 
 //MISC

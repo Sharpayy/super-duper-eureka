@@ -38,49 +38,49 @@ uint8_t AirCraft::getType() const {
 	return this->type;
 }
 
-Glider::Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type) {
+Glider::Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
 	this->position = position;
 	path = { position, destination->getPosition() };
 
 	heightData = new BezierCurveParametersA{};
 	heightData->str_pos = { 0, baseHeight };
-	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
-	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
+	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
+	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
 	heightData->end_pos = { 0, destination->getNpm() };
 
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 }
 
-Ballon::Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type) {
+Ballon::Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
 	this->position = position;
 	path = { position, destination->getPosition()};
 
 	heightData = new BezierCurveParametersA{};
 	heightData->str_pos = { 0, baseHeight };
-	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
-	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
+	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight,data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
+	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
 	heightData->end_pos = { 0, destination->getNpm() };
 
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 }
 
-Helicopter::Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type) {
+Helicopter::Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
 	this->position = position;
 	path = { position, destination->getPosition() };
 
 	heightData = new BezierCurveParametersA{};
 	heightData->str_pos = { 0, baseHeight };
-	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
-	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
+	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight,data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
+	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(),data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
 	heightData->end_pos = { 0, destination->getNpm() };
 
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 }
 
-Jet::Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type) {
+Jet::Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
 	this->position = position;
 	path = { position, destination->getPosition() };
 
@@ -88,22 +88,22 @@ Jet::Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t 
 
 	heightData = new BezierCurveParametersA{};
 	heightData->str_pos = { 0, baseHeight };
-	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, staticMinNPM, staticMaxNPM), minNPM, maxNPM ) };
-	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
+	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
+	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(),data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
 	heightData->end_pos = { 0, destination->getNpm() };
 
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 }
 
-Plane::Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type) {
+Plane::Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
 	this->position = position;
 	path = { position, destination->getPosition() };
 
 	heightData = new BezierCurveParametersA{};
 	heightData->str_pos = { 0, baseHeight };
-	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
-	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), staticMinNPM, staticMaxNPM), minNPM, maxNPM) };
+	heightData->mid0_pos = { 0, mapValueToRange(normalizeVal(baseHeight, data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
+	heightData->mid1_pos = { 0, mapValueToRange(normalizeVal(destination->getNpm(), data->stMinH, data->stMaxH), data->acMinH, data->acMaxH) };
 	heightData->end_pos = { 0, destination->getNpm() };
 
 

@@ -63,6 +63,8 @@ public:
     QT() {
         this->amount = 0;
         root = new Node{};
+        this->w = 1;
+        this->h = 1;
         _alloc(1);
         //root->_init(nullptr, { w,h });
     }

@@ -316,7 +316,12 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	glUniform1ui(ulSelectedModel, 1);
 
-	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp };
+	Config cfg;
+	if (fileExist("Config", ".yaml")) {
+		loadConfig(cfg, "Config.yaml");
+	}
+	else saveConfig(cfg, "Config.yaml");
+	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp, cfg};
 
 	//AircraftRenderData ard = AircraftRenderData();
 
