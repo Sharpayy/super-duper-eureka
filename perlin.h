@@ -35,6 +35,6 @@ private:
     double Noise(int x, int y) const;
 
     double persistence, frequency, amplitude;
-    uint8_t octaves; 
+    uint8_t octaves;
     uint32_t randomseed;
 };

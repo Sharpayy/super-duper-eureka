@@ -33,7 +33,7 @@ public:
 	{
 		return gltGetTextHeight(model, scale.y) + gltGetTextHeight(brand, scale.y) + gltGetTextHeight(speed, scale.y) + gltGetTextHeight(height, scale.y);
 	}
-	
+
 	void Render(glm::mat4 _mvp)
 	{
 		gltBeginDraw();
@@ -41,7 +41,7 @@ public:
 		float w = gltGetTextWidth(model, scale.x);
 		float h = gltGetTextHeight(model, scale.y);
 		glm::vec2 offset = glm::vec2(0.0f);
-		
+
 		glm::mat4 m = glm::mat4(1.0f);
 		m = glm::translate(m, glm::vec3(posit, 2.0f));
 		m = glm::translate(m, glm::vec3(w / 2.0f, h / 2.0f, 2.0f));
@@ -53,8 +53,8 @@ public:
 		offset.y -= h;
 
 
-		 w = gltGetTextWidth(brand, scale.x);
-		 h = gltGetTextHeight(brand, scale.y);
+		w = gltGetTextWidth(brand, scale.x);
+		h = gltGetTextHeight(brand, scale.y);
 
 		m = glm::mat4(1.0f);
 		m = glm::translate(m, glm::vec3(posit + offset, 2.0f));
@@ -174,14 +174,12 @@ public:
 	uint32_t currentPathSection;
 	glm::vec2 destination;
 	glm::vec2 start;
-	
+
 	FlyPath() = default;
 	FlyPath(glm::vec2 start, glm::vec2 end);
 
 	uint32_t FetchRenderInfo(BezierCurveParametersA* data, uint32_t max);
 	uint32_t GetPointAmount();
-
-	float GetCurrentSectionFlyDistance();
 
 	void ChangeDestinatination(glm::vec2 dest);
 	void AddPoint(glm::vec2 p);
@@ -194,7 +192,7 @@ public:
 
 	glm::fvec2 getBezierPosition2D(BezierCurveParametersA* param, float dt, bool change = true);
 	float getBezierPosition1D(BezierCurveParametersA* param, float dt);
-	
+
 	float GetCurrentSectionDistance();
 	void resetT() { t = 0; };
 
