@@ -905,6 +905,7 @@ PerformanceTimer::PerformanceTimer(uint32_t qid)
 
 void PerformanceTimer::TimeStart()
 {
+	glFinish();
 	glBeginQuery(GL_TIME_ELAPSED, id);
 }
 
