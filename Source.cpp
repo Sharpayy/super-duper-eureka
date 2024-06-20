@@ -166,9 +166,7 @@ int main(int argc, char** argv)
 	iconProgram.use();
 	BindSampler("image0", 0, iconProgram.id);
 	uint32_t ulIconScale = glGetUniformLocation(iconProgram.id, "uIconScale");
-	uint32_t ulSelectedModel = glGetUniformLocation(iconProgram.id, "SelectedModelId");
 	glUniform1f(ulIconScale, BaseIconScale);
-	glUniform1ui(ulSelectedModel, 0xFFFFFFFF);
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
@@ -263,16 +261,11 @@ int main(int argc, char** argv)
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	CPUPerformanceTimer LoopElapsedTime = CPUPerformanceTimer();
-	PerformanceTimer RenderElapsedTime = PerformanceTimer();
-	RenderElapsedTime.Reset();
 	LoopElapsedTime.Reset();
 	uint32_t lp = 0;
 	uint32_t loopTime = 0;
 
 	int64_t SumRenderTime = 0;
-
-	iconProgram.use();
-	glUniform1ui(ulSelectedModel, 1);
 
 	Config cfg;
 	if (fileExist("Config", ".yaml")) {
@@ -281,23 +274,6 @@ int main(int argc, char** argv)
 	else saveConfig(cfg, "Config.yaml");
 	AManager amanager{ &r, SquareVBO, iconProgram, simpleProgram, &Bezier, SquareEBO, &camera , pp, cfg };
 
-	//AircraftRenderData ard = AircraftRenderData();
-
-	//ard.SetColor(0.7f, 0.2f, 0.1f);
-	//ard.SetModel("Boeing 737");
-	//ard.SetBrand("Lot");
-	//ard.SetHeigth(6100.0f);
-	//ard.SetSpeed(640.0f);
-
-	std::unordered_map<uint8_t, float> dupa;
-	dupa[0] = 1.24f;
-
-	if (dupa.find(0) == dupa.end()) {
-		int i = 0;
-	}
-	else {
-		int d = 0;
-	}
 	r.BindMVP();
 	while (true)
 	{
@@ -326,19 +302,14 @@ int main(int argc, char** argv)
 		loopTime = clock() - evLoopStart;
 		LoopElapsedTime.End();
 		evCurrTime += clock() - evLoopStart;
-		SumRenderTime += RenderElapsedTime.GetElapsedTime();
 		if (evCurrTime >= evLoopTimeTarget)
 		{
-
 			char NewWinTitle[64];
-			SumRenderTime = SumRenderTime / 1000000;
-
-			snprintf(NewWinTitle, 64, "Fps: %d Rendr: %fms", lp, (float)SumRenderTime / (float)lp);
+			snprintf(NewWinTitle, 64, "Radar Fps: %d", lp);
 
 			SDL_SetWindowTitle(win.win, NewWinTitle);
 			evCurrTime -= evLoopTimeTarget;
 			lp = 0;
-			SumRenderTime = 0;
 		}
 
 	}
