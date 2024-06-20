@@ -102,11 +102,6 @@ int main(int argc, char** argv)
 
 	const char* srcShaderVertex = GetFileData((char*)"shaderVertex.glsl")->c_str();
 	const char* srcShaderFragment = GetFileData((char*)"shaderFragment.glsl")->c_str();
-	const char* srcShaderCompute = GetFileData((char*)"TransparentResolveCompute.glsl")->c_str();
-	const char* srcPstPrVertex = GetFileData((char*)"VertexPostProcessing.glsl")->c_str();
-	const char* srcPstPrFrag = GetFileData((char*)"FragmentPostProcessingCpy.glsl")->c_str();
-	const char* srcOpaqueFrag = GetFileData((char*)"OpaqueFragmentShader.glsl")->c_str();
-	const char* srcZeroAtomic = GetFileData((char*)"AtomicZeroFeedback.glsl")->c_str();
 	const char* srcShaderOncColFrag = GetFileData((char*)"ShaderFragmentOneColor.glsl")->c_str();
 	const char* srcShaderIconVertex = GetFileData((char*)"ShaderVertexIcon.glsl")->c_str();
 	const char* srcShaderIconFragment = GetFileData((char*)"ShaderFragmentIcon.glsl")->c_str();
@@ -125,11 +120,6 @@ int main(int argc, char** argv)
 
 	Shader<GL_VERTEX_SHADER>   shdrVertex = Shader<GL_VERTEX_SHADER>(srcShaderVertex);
 	Shader<GL_FRAGMENT_SHADER> shdrFragment = Shader<GL_FRAGMENT_SHADER>(srcShaderFragment);
-	Shader<GL_COMPUTE_SHADER>  shdrCompute = Shader<GL_COMPUTE_SHADER>(srcShaderCompute);
-	Shader<GL_VERTEX_SHADER>   shdrPstPrVertex = Shader<GL_VERTEX_SHADER>(srcPstPrVertex);
-	Shader<GL_FRAGMENT_SHADER> shdrPstPrFrag = Shader<GL_FRAGMENT_SHADER>(srcPstPrFrag);
-	Shader<GL_FRAGMENT_SHADER> shdrOpaqueFrag = Shader<GL_FRAGMENT_SHADER>(srcOpaqueFrag);
-	Shader<GL_COMPUTE_SHADER>  shdrCompSwapAtc = Shader<GL_COMPUTE_SHADER>(srcZeroAtomic);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgOneColor = Shader<GL_FRAGMENT_SHADER>(srcShaderOncColFrag);
 	Shader<GL_FRAGMENT_SHADER> shdrFrgIcon = Shader<GL_FRAGMENT_SHADER>(srcShaderIconFragment);
 	Shader<GL_VERTEX_SHADER>   shdrVertIcon = Shader<GL_VERTEX_SHADER>(srcShaderIconVertex);
@@ -165,36 +155,13 @@ int main(int argc, char** argv)
 	simpleProgram.programAddShader(shdrVertex.id);
 	simpleProgram.programCompile();
 
-	Program swapAtomicCnt = Program();
-	swapAtomicCnt.programAddShader(shdrCompSwapAtc.id);
-	swapAtomicCnt.programCompile();
-	swapAtomicCnt.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
-	printf("%s\n", debugInfo);
-
 	Program prgm = Program();
 	prgm.programAddShader(shdrFragment.id);
 	prgm.programAddShader(shdrVertex.id);
 	prgm.programCompile();
 
-	Program prgmc = Program();
-	prgmc.programAddShader(shdrCompute.id);
-	prgmc.programCompile();
-
-	Program ppcpy = Program();
-	ppcpy.programAddShader(shdrPstPrFrag.id);
-	ppcpy.programAddShader(shdrPstPrVertex.id);
-	ppcpy.programCompile();
-
-	Program popaque = Program();
-	popaque.programAddShader(shdrOpaqueFrag.id);
-	popaque.programAddShader(shdrVertex.id);
-	popaque.programCompile();
-
 	//if (prgm.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE) == GL_FALSE)
 	//	printf("%s\n", debugInfo);
-
-	prgmc.programGetDebugInfo(debugInfo, DEBUG_INFO_SPACE);
-	printf("%s\n", debugInfo);
 
 	iconProgram.use();
 	BindSampler("image0", 0, iconProgram.id);
@@ -205,16 +172,6 @@ int main(int argc, char** argv)
 
 	simpleProgram.use();
 	BindSampler("image0", 0, simpleProgram.id);
-
-	// ppcpy setup
-	ppcpy.use();
-	BindSampler("image0", 0, ppcpy.id);
-
-	prgm.use();
-	BindSampler("image0", 0, prgm.id);
-
-	popaque.use();
-	BindSampler("image0", 0, popaque.id);
 
 	Buffer<GL_ARRAY_BUFFER> SquareVBO = Buffer<GL_ARRAY_BUFFER>(sizeof(Square11VertexUv_2d), Square11VertexUv_2d, GL_STATIC_DRAW);
 	Buffer<GL_ELEMENT_ARRAY_BUFFER> SquareEBO = Buffer<GL_ELEMENT_ARRAY_BUFFER>(sizeof(Square1Indice_2d), Square1Indice_2d, GL_STATIC_DRAW);
@@ -349,12 +306,8 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		//RenderElapsedTime.TimeStart();
 		amanager.onUpdate(loopTime / 1000.0f);
-		//r.RenderSelectedModel(RENDER_MODEL_SQUARE1);
 		Bezier.Render(0);
-		//ard.Render(r.MVP.matProjCamera);
-		//RenderElapsedTime.TimeEnd();
 
 		if (MapSetting.NeedUpdate == 1)
 		{

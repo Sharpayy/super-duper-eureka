@@ -328,22 +328,27 @@ AirCraft* AManager::generateRandomAirCraft(int idx, int mapWidth, int mapHeight)
 	{
 	case 0:
 		ballon = new Ballon{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_BALLOON, &hdata };
+		ballon->speed = generateRandomValueRange(120, 300);
 		r->newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 		return (AirCraft*)ballon;
 	case 1:
 		jet = new Jet{ s_e.first->getPosition(), (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_JET, &hdata };
+		jet->speed = generateRandomValueRange(500, 1100);
 		r->newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
 		return (AirCraft*)jet;
 	case 2:
 		helicopter = new Helicopter{ s_e.first->getPosition(),  (float)s_e.first->getNpm(),  s_e.second, RENDER_MODEL_HELICOPTER, &hdata };
+		helicopter->speed = generateRandomValueRange(320, 510);
 		r->newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
 		return (AirCraft*)helicopter;
 	case 3:
 		plane = new Plane{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_PLANE, &hdata };
+		plane->speed = generateRandomValueRange(500, 850);
 		r->newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
 		return (AirCraft*)plane;
 	case 4:
 		glider = new Glider{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_GLIDER, &hdata };
+		glider->speed = generateRandomValueRange(230, 380);
 		r->newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
 		return (AirCraft*)glider;
 
@@ -442,7 +447,7 @@ void AManager::handleAirCraftsMovement(AirCraft*& ac, float dt)
 
 	float pathDistance = ac->path.BezierSingleLength(ac->path.GetCurrentSection());
 	if (dt == 0.0f) dt = SDL_FLT_EPSILON;
-	float t = ac->speed / pathDistance * dt * 50.0f;
+	float t = 1.0f / pathDistance * dt * 50.0f;
 	ac->position = ac->path.getBezierPosition2D(ac->path.GetCurrentSection(), t);
 	if (ac->path.path.size() == 1) maxDist = glm::distance(ac->path.start, ac->path.destination);
 	else {
@@ -495,7 +500,6 @@ void AManager::handleAirCraftCollision(AirCraft*& ac, float w, float h, std::vec
 				if (ac->dist < 1.5f && hd < cfg->collisionResponseHeight) {
 					r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
 					AircraftsToRemove.push_back(ac);
-					std::cout << "BOOM KURWA\n";
 				}
 				cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, glm::clamp(distMax - distMin, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 			}

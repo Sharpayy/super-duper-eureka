@@ -17,124 +17,23 @@
 class AircraftRenderData
 {
 public:
-	AircraftRenderData()
-	{
-		model = gltCreateText();
-		brand = gltCreateText();
-		speed = gltCreateText();
-		height = gltCreateText();
+	AircraftRenderData();
 
-		scale = glm::vec2(200.0f, 50.0f);
-		posit = glm::vec2(0.0f);
-		f = 0.0f;
-	}
+	void Render(glm::mat4 _mvp);
 
-	float GetFullHeight()
-	{
-		return gltGetTextHeight(model, scale.y) + gltGetTextHeight(brand, scale.y) + gltGetTextHeight(speed, scale.y) + gltGetTextHeight(height, scale.y);
-	}
+	void SetModel(const char* v);
 
-	void Render(glm::mat4 _mvp)
-	{
-		gltBeginDraw();
+	void SetColor(float r, float g, float b);
 
-		float w = gltGetTextWidth(model, scale.x);
-		float h = gltGetTextHeight(model, scale.y);
-		glm::vec2 offset = glm::vec2(0.0f);
+	void SetBrand(const char* v);
 
-		glm::mat4 m = glm::mat4(1.0f);
-		m = glm::translate(m, glm::vec3(posit, 2.0f));
-		m = glm::translate(m, glm::vec3(w / 2.0f, h / 2.0f, 2.0f));
-		m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1, 0, 0));
-		m = glm::translate(m, glm::vec3(-w / 2.0f, -h / 2.0f, 0.0f));
-		m = glm::scale(m, glm::vec3(scale, 0.0f));
+	void SetSpeed(float v);
 
-		gltDrawText(model, &(_mvp * m)[0].x);
-		offset.y -= h;
+	void SetHeigth(float v);
 
+	void SetPosition(glm::fvec2 position);
 
-		w = gltGetTextWidth(brand, scale.x);
-		h = gltGetTextHeight(brand, scale.y);
-
-		m = glm::mat4(1.0f);
-		m = glm::translate(m, glm::vec3(posit + offset, 2.0f));
-		m = glm::translate(m, glm::vec3(w / 2.0f, h / 2.0f, 2.0f));
-		m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1, 0, 0));
-		m = glm::translate(m, glm::vec3(-w / 2.0f, -h / 2.0f, 0.0f));
-		m = glm::scale(m, glm::vec3(scale, 0.0f));
-
-		gltDrawText(brand, &(_mvp * m)[0].x);
-		offset.y -= h;
-
-		w = gltGetTextWidth(speed, scale.x);
-		h = gltGetTextHeight(speed, scale.y);
-
-		m = glm::mat4(1.0f);
-		m = glm::translate(m, glm::vec3(posit + offset, 2.0f));
-		m = glm::translate(m, glm::vec3(w / 2.0f, h / 2.0f, 2.0f));
-		m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1, 0, 0));
-		m = glm::translate(m, glm::vec3(-w / 2.0f, -h / 2.0f, 0.0f));
-		m = glm::scale(m, glm::vec3(scale, 0.0f));
-
-		gltDrawText(speed, &(_mvp * m)[0].x);
-		offset.y -= h;
-
-		w = gltGetTextWidth(height, scale.x);
-		h = gltGetTextHeight(height, scale.y);
-
-		m = glm::mat4(1.0f);
-		m = glm::translate(m, glm::vec3(posit + offset, 2.0f));
-		m = glm::translate(m, glm::vec3(w / 2.0f, h / 2.0f, 2.0f));
-		m = glm::rotate(m, glm::radians(180.0f), glm::vec3(1, 0, 0));
-		m = glm::translate(m, glm::vec3(-w / 2.0f, -h / 2.0f, 0.0f));
-		m = glm::scale(m, glm::vec3(scale, 0.0f));
-
-		gltDrawText(height, &(_mvp * m)[0].x);
-		offset.y -= h;
-
-		gltEndDraw();
-	}
-
-	void SetModel(const char* v)
-	{
-		std::string s = std::string("Model: ");
-		s.append(v);
-		gltSetText(model, s.c_str());
-	}
-
-	void SetColor(float r, float g, float b)
-	{
-		gltColor(r, g, b, 0.0f);
-	}
-
-	void SetBrand(const char* v)
-	{
-		std::string s = std::string("Brand: ");
-		s.append(v);
-		gltSetText(brand, s.c_str());
-	}
-
-	void SetSpeed(float v)
-	{
-		std::string s = std::string("Speed: ");
-		s.append(std::to_string(v));
-		gltSetText(speed, s.c_str());
-	}
-
-	void SetHeigth(float v)
-	{
-		std::string s = std::string("Height: ");
-		s.append(std::to_string(v));
-		gltSetText(height, s.c_str());
-	}
-
-	void SetPosition(glm::fvec2 position) {
-		this->posit = position;
-	}
-
-	void SetScale(glm::fvec2 scale) {
-		this->scale = scale;
-	}
+	void SetScale(glm::fvec2 scale);
 
 private:
 	GLTtext* model;
