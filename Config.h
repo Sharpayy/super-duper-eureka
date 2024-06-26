@@ -1,10 +1,9 @@
 #pragma once
-#include <iostream>
-#include <yaml-cpp/yaml.h>
-#define YAML_CPP_STATIC_DEFINE
-
-#include <fstream>
 #include <filesystem>
+#define YAML_CPP_DLL
+#define YAML_CPP_STATIC_DEFINE
+#include <yaml-cpp/yaml.h>
+#include <fstream>
 #include <string>
 
 struct Config {
