@@ -1,9 +1,9 @@
 Aircraft amount factor: 1
 Towers amount factor: 1
 Airports amount factor: 1
-Map width: 3000
-Map height: 3000
-Map scale: 1
+Map width: 5000
+Map height: 5000
+Map scale: 0.5
 Map CPU generation enabled: true
 Map persistence: 1
 Map frequency: 2.5
@@ -15,6 +15,6 @@ Aircrafts desired maximum NPM: 12801.5996
 Static Objects desired minimum NPM: 67.2300034
 Static Objects desired maximum NPM: 156.630005
 Aircrafts collision detection distance: 200
-Aircrafts height collision response: 50
+Aircrafts height collision response: 200
 Airports minimum distance: 300
 Towers minimum distance: 100

@@ -8,7 +8,7 @@ void yamlSerialize(Config& cfg, std::string fileName) {
 
     //out << YAML::Key << "DATA" << YAML::BeginSeq;
 
-    out << YAML::Key << "Aircraft amount factor" << YAML::Value << cfg.n_airports;
+    out << YAML::Key << "Aircraft amount factor" << YAML::Value << cfg.n_aircrafts;
     out << YAML::Key << "Towers amount factor" << YAML::Value << cfg.n_towers;
     out << YAML::Key << "Airports amount factor" << YAML::Value << cfg.n_aircrafts;
     out << YAML::Key << "Map width" << YAML::Value << cfg.map_width;
@@ -45,9 +45,9 @@ void yamlDeserialize(Config& cfg, std::string path) {
     auto config = YAML::Load(strStream);
     //config = config["Data"];
 
-    cfg.n_airports = config["Aircraft amount factor"].as<float>();
+    cfg.n_airports = config["Airports amount factor"].as<float>();
     cfg.n_towers = config["Towers amount factor"].as<float>();
-    cfg.n_aircrafts = config["Airports amount factor"].as<float>();
+    cfg.n_aircrafts = config["Aircraft amount factor"].as<float>();
     cfg.map_width = config["Map width"].as<float>();
     cfg.map_height = config["Map height"].as<float>();
     cfg.scale = config["Map scale"].as<float>();

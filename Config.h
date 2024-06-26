@@ -31,7 +31,7 @@ struct Config {
 
 	//Collision
 	float collsiionDetectionDistance = 200.0f;
-	float collisionResponseHeight = 50.0f;
+	float collisionResponseHeight = 200.0f;
 	float airportsCollisionDistance = 300.0f;
 	float towersCollisionDistance = 100.0f;
 };

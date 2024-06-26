@@ -233,7 +233,6 @@ public:
 	float angle;
 
 	float dist;
-	bool collide = false;
 
 	uint8_t getType() const;
 	std::string GetName() const;
@@ -241,9 +240,15 @@ public:
 	void SetAngle(float a);
 	BezierCurveParametersA* heightData;
 
+	//
+	void setDtype(uint8_t dtype);
+	uint8_t getDtype() const;
 protected:
 	std::string name;
 	uint8_t type;
+
+	//SOMETHING THAT SHOULDNT BE HERE AND ITS ONLY FOR FUN
+	uint8_t dtype;
 };
 
 class Ballon : public AirCraft {

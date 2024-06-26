@@ -195,6 +195,7 @@ public:
 					selectedAircraft->heightData->end_pos = { 0, obj->getNpm() };
 					br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
 					pathRenderCount = selectedAircraft->path.path.size();
+					selectedAircraft->setDtype(obj->getType());
 				}
 				else {
 					qtT->_collidePoints(PointQT{ mousePos.x, mousePos.y }, 10.0f, 10.0f, objects);
@@ -207,7 +208,8 @@ public:
 						selectedAircraft->heightData->end_pos = { 0, obj->getNpm() };
 						br->UpdateData((BezierCurveParameters*)(selectedAircraft->path.getData()), selectedAircraft->path.path.size(), 0);
 						pathRenderCount = selectedAircraft->path.path.size();
-					}
+						selectedAircraft->setDtype(obj->getType());
+;					}
 				}
 
 				if (!obj) {
@@ -415,10 +417,11 @@ private:
 				}
 				ac->dist = distMin;
 				if ((colv.size() >= 2)) {
-					if (ac->dist < 1.5f && hd < cfg->collisionResponseHeight) {
+					if (ac->dist < 2.0f && hd < cfg->collisionResponseHeight) {
 						r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
 						AircraftsToRemove.push_back(ac);
 						AircraftsToRemove.push_back(c);
+						std::cout << "COLLISION ON POSITION (" << c->position.x << "," << c->position.y << ")\n";
 					}
 					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, glm::clamp(distMax - distMin, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 				}
@@ -450,6 +453,7 @@ private:
 				}
 				if (glm::distance(ac->position, ac->path.destination) < 5.0f) {
 					AirCraftsToRemove.push_back(ac);
+					if(ac->getDtype() == RENDER_MODEL_TOWER) r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->path.destination.x, ac->path.destination.y, 0.05f }));
 				}
 			}
 		}

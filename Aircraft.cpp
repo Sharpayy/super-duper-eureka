@@ -17,10 +17,16 @@ float AirCraft::CalcAngle()
 }
 
 AirCraft::AirCraft() {
-	this->speed = 1.0f;
+	
 }
 
+void AirCraft::setDtype(uint8_t dtype) {
+	this->dtype = dtype;
+}
 
+uint8_t AirCraft::getDtype() const {
+	return dtype;
+}
 
 //AirCraft::AirCraft(glm::fvec2 position, glm::fvec2 destination, uint8_t type) {
 //	this->position = position;
@@ -51,6 +57,7 @@ Glider::Glider(glm::fvec2 position, float baseHeight, StaticObj* destination, ui
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 	this->speed = 0.6f;
+	this->dtype = destination->getType();
 }
 
 Ballon::Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
@@ -66,6 +73,7 @@ Ballon::Ballon(glm::fvec2 position, float baseHeight, StaticObj* destination, ui
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 	this->speed = 0.2f;
+	this->dtype = destination->getType();
 }
 
 Helicopter::Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
@@ -81,6 +89,7 @@ Helicopter::Helicopter(glm::fvec2 position, float baseHeight, StaticObj* destina
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 	this->speed = 0.6f;
+	this->dtype = destination->getType();
 }
 
 Jet::Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
@@ -98,6 +107,7 @@ Jet::Jet(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t 
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 	this->speed = 1.0f;
+	this->dtype = destination->getType();
 }
 
 Plane::Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint8_t type, acHeightData* data) {
@@ -114,6 +124,7 @@ Plane::Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint
 	this->name = aircraftNames[type][rand() % aircraftNames[type].size()];
 	this->type = type;
 	this->speed = 0.8f;
+	this->dtype = destination->getType();
 }
 
 void AirCraft::onUpdate() {
