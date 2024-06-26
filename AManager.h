@@ -49,6 +49,8 @@ public:
 		this->ard = AircraftRenderData();
 		this->hdata = { cfg.staticObjectsMinNPM, cfg.staticObjectsMaxNPM, cfg.aircraftsMinNPM, cfg.aircraftsMaxNPM };
 
+		ls = glGetUniformLocation(program.id, "uIconScale");
+
 		int x, y, c;
 		Texture2D MapTexture;
 		uint8_t* MapTextureData;
@@ -96,8 +98,8 @@ public:
 
 		qtT = new QT<StaticObj>{ (int)cfg.map_width, (int)cfg.map_height };
 
-		map = Map{cfg.map_width * cfg.scale, cfg.map_height * cfg.scale, cfg.persistence, cfg.frequency, cfg.amplitude, cfg.octaves, cfg.randomseed, m, cfg.CPU};
-		
+		map = Map{ cfg.map_width * cfg.scale, cfg.map_height * cfg.scale, cfg.persistence, cfg.frequency, cfg.amplitude, cfg.octaves, cfg.randomseed, m, cfg.CPU };
+
 		qtAp->_alloc(2);
 		generateStaticObjects(cfg.map_width, cfg.map_height);
 		map.ReleaseTextureData();
@@ -115,7 +117,6 @@ public:
 		r->newObject(RENDER_MODEL_MAP, glm::scale(glm::mat4(1.0f), glm::fvec3{ cfg.map_width / 2.0f, cfg.map_height / 2.0f, 0 }));
 
 		generator.gen = std::mt19937(generator.rd());
-		//generator.dis = std::uniform_real_distribution<float>(0.0, 1.0);
 
 		qtAc->_alloc(5);
 		AirCraft* ac;
@@ -123,7 +124,7 @@ public:
 		acData.amount = aircraftAmount;
 		acData.amin = 0.8f;
 		acData.amax = 1.2f;
-		
+
 		for (int i = 0; i < aircraftAmount; i++) {
 			ac = generateRandomAirCraft(i % 5, cfg.map_width, cfg.map_height);
 			AirCraftMap[ac->getType()].push_back(ac);
@@ -133,14 +134,12 @@ public:
 
 		//TEXT
 		ard.SetColor(0.7f, 0.2f, 0.1f);
-
-		//86�400
-		/*timeScale = 1.0f / 3600.0f;*/
 	}
 
-	void onUpdate() {
+	void onUpdate(float dt) {
 		r->RenderSelectedModel(RENDER_MODEL_MAP);
 		r->RenderSelectedModel(RENDER_MODEL_EXPLOSION);
+		glUniform1f(ls, 10.0f);
 		r->RenderSelectedModel(RENDER_MODEL_AIRPORT);
 		r->RenderSelectedModel(RENDER_MODEL_HELICOPTER);
 		r->RenderSelectedModel(RENDER_MODEL_TOWER);
@@ -148,6 +147,8 @@ public:
 		r->RenderSelectedModel(RENDER_MODEL_BALLOON);
 		r->RenderSelectedModel(RENDER_MODEL_JET);
 		r->RenderSelectedModel(RENDER_MODEL_PLANE);
+		if (r->getModel(RENDER_MODEL_EXPLOSION)->activeObjects > 0) glUniform1f(ls, 25.0f);
+
 
 		//TEXT
 		if (selectedAircraft) {
@@ -164,7 +165,6 @@ public:
 			std::cout << mousePos.x << " " << mousePos.y << "\n";
 			std::vector<AirCraft*> pcaV;
 			if (qtAc->_collidePoints(PointQT{ mousePos.x, mousePos.y }, 50, 50, pcaV)) {
-				//std::cout << pcaV.at(0)->collide << "|" << pcaV.at(0)->dist << "\n";
 				selectedAircraft = pcaV.at(0);
 				ard.SetModel(selectedAircraft->GetName().c_str());
 				ard.SetBrand("Lot");
@@ -222,7 +222,7 @@ public:
 				}
 			}
 		}
-		handleAirCraftLogic();
+		handleAirCraftLogic(dt);
 	}
 
 private:
@@ -239,7 +239,7 @@ private:
 		while (idx1 == idx0) {
 			idx0 = generateRandomValueRange(0, s - 1);
 		}
-		return { AirPortsVec.at(idx0), AirPortsVec.at(idx1)};
+		return { AirPortsVec.at(idx0), AirPortsVec.at(idx1) };
 	}
 
 	AirCraft* generateRandomAirCraft(int idx, int mapWidth, int mapHeight) {
@@ -258,19 +258,19 @@ private:
 			r->newObject(ballon->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ ballon->position.x, ballon->position.y, 0.05f }), &ballon->LongId);
 			return (AirCraft*)ballon;
 		case 1:
-			jet = new Jet{ s_e.first->getPosition(), (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_JET, &hdata};
+			jet = new Jet{ s_e.first->getPosition(), (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_JET, &hdata };
 			r->newObject(jet->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ jet->position.x, jet->position.y, 0.05f }), &jet->LongId);
 			return (AirCraft*)jet;
 		case 2:
-			helicopter = new Helicopter{ s_e.first->getPosition(),  (float)s_e.first->getNpm(),  s_e.second, RENDER_MODEL_HELICOPTER, &hdata};
+			helicopter = new Helicopter{ s_e.first->getPosition(),  (float)s_e.first->getNpm(),  s_e.second, RENDER_MODEL_HELICOPTER, &hdata };
 			r->newObject(helicopter->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ helicopter->position.x, helicopter->position.y , 0.05f }), &helicopter->LongId);
 			return (AirCraft*)helicopter;
 		case 3:
-			plane = new Plane{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_PLANE, &hdata};
+			plane = new Plane{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_PLANE, &hdata };
 			r->newObject(plane->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ plane->position.x, plane->position.y, 0.05f }), &plane->LongId);
 			return (AirCraft*)plane;
 		case 4:
-			glider = new Glider{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_GLIDER, &hdata};
+			glider = new Glider{ s_e.first->getPosition(),  (float)s_e.first->getNpm(), s_e.second, RENDER_MODEL_GLIDER, &hdata };
 			r->newObject(glider->getType(), glm::translate(glm::mat4(1.0f), glm::fvec3{ glider->position.x, glider->position.y, 0.05f }), &glider->LongId);
 			return (AirCraft*)glider;
 
@@ -305,7 +305,6 @@ private:
 		StaticObj* st;
 		glm::fvec2 position;
 
-		//CHANGE IT LATER AND ADD SETTINGS
 		uint8_t biomeType;
 		bool isTerrainAdapted;
 		float thr;
@@ -371,7 +370,7 @@ private:
 		else {
 			int i;
 			for (i = 0; i < ac->path.path.size() - 1; i++) {
-				maxDist += glm::distance(ac->path.path.at(i).str_pos, ac->path.path.at(i+1).str_pos);
+				maxDist += glm::distance(ac->path.path.at(i).str_pos, ac->path.path.at(i + 1).str_pos);
 			}
 			maxDist += glm::distance(ac->path.path.at(i).str_pos, ac->path.path.at(i).end_pos);
 		}
@@ -380,20 +379,20 @@ private:
 		angle = getAirCraftAngle(ac);
 		ac->distanceToGround = ac->path.getBezierPosition1D(ac->heightData, t);
 		r->BindActiveModel((*(RENDER_LONG_ID*)&ac->LongId).ModelId);
-		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f}) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
+		r->SetObjectMatrix((*(RENDER_LONG_ID*)&ac->LongId).ObjectId, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }) * glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1)), true);
 	}
 
 	void handleAirCraftCollision(AirCraft*& ac, float w, float h, std::vector<AirCraft*>& AircraftsToRemove) {
 		AirCraft* acr = nullptr;
 		// ultra slow shit
-		//ADD THIS TO SETTINGS
 		float dist, hd = 1000;
 		float distMax = 200;
 		float distMin = distMax;
 		std::vector<AirCraft*> colv;
+		AirCraft* c;
 		bool same = false;
 		bool collide;
-		if (qtAc->_getSize()) collide = qtAc->_collidePoints(PointQT{ac->position.x, ac->position.y}, w, h, colv);
+		if (qtAc->_getSize()) collide = qtAc->_collidePoints(PointQT{ ac->position.x, ac->position.y }, w, h, colv);
 		else {
 			wMap.erase(ac->LongId);
 			collide = qtAc->_collidePoints(PointQT{ ac->position.x, ac->position.y }, w, h, colv);
@@ -401,11 +400,12 @@ private:
 		}
 		if (collide) {
 			if (!elementExist(ac->LongId)) {
-				for (auto& col : colv) {
+				for (AirCraft* col : colv) {
 					if (col != ac) {
 						dist = glm::distance(ac->position, col->position);
 						if (dist < distMin) {
 							distMin = dist;
+							c = col;
 						}
 						dist = glm::distance(ac->distanceToGround, col->distanceToGround);
 						if (dist < hd) hd = dist;
@@ -417,12 +417,12 @@ private:
 					if (ac->dist < 1.5f && hd < cfg->collisionResponseHeight) {
 						r->newObject(RENDER_MODEL_EXPLOSION, glm::translate(glm::mat4(1.0f), glm::fvec3{ ac->position.x, ac->position.y, 0.05f }));
 						AircraftsToRemove.push_back(ac);
-						std::cout << "BOOM KURWA\n";
+						AircraftsToRemove.push_back(c);
 					}
 					cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, glm::clamp(distMax - distMin, 0.0f, distMax), r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
 				}
 				else if (same) cd.UpdateSingleData(LONG_GET_MODEL(ac->LongId) * 500.0f, 0.0f, r->MapToObjectIdx(LONG_GET_OBJECT(ac->LongId)));
-				
+
 			}
 		}
 		else {
@@ -433,9 +433,9 @@ private:
 		}
 	}
 
-	void handleAirCraftLogic() {
-		float t = 0.0f;
+	void handleAirCraftLogic(float t) {
 		cd.FetchCollisionBuffer();
+
 		int acActualSize = 0;
 		std::vector<AirCraft*> AirCraftsToRemove, newAirCrafts;
 		for (auto planeType : AirCraftMap) {
@@ -458,6 +458,8 @@ private:
 
 		AirCraft* newAc;
 		int type;
+		std::set<AirCraft*> s(AirCraftsToRemove.begin(), AirCraftsToRemove.end());
+		AirCraftsToRemove.assign(s.begin(), s.end());
 		for (AirCraft* ac : AirCraftsToRemove) {
 			if (ac == selectedAircraft) {
 				br->UpdateData(nullptr, 0, 0);
@@ -550,6 +552,7 @@ private:
 	BezierRenderer* br;
 	CollisionDrawer cd;
 	uint32_t pathRenderCount;
+	uint32_t ls;
 
 	struct _generator {
 		std::random_device rd;

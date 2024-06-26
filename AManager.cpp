@@ -1,4 +1,4 @@
-#include "AManager.h"
+﻿#include "AManager.h"
 
 //SDL_Point mousePos;
 /*
@@ -89,7 +89,7 @@ void CollisionDrawer::SendCollisionBuffer()
 
 void CollisionDrawer::UpdateSingleData(uint32_t offset, float c, uint32_t idx)
 {
-	if (mappedArray == nullptr)
+	if (mappedArray == nullptr || offset + idx > size)
 		return;
 
 	mappedArray[offset + idx] = c;

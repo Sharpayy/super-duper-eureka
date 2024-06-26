@@ -3,7 +3,15 @@
 void yamlSerialize(Config& cfg, std::string fileName) {
     YAML::Emitter out;
 
+
     out << YAML::BeginMap;
+
+    if (out.good()) {
+        std::cout << "Failed to initialize YAML Emitter" << std::endl;
+
+    }
+
+    //out << YAML::Key << "DATA" << YAML::BeginSeq;
 
     out << YAML::Key << "Aircraft amount factor" << YAML::Value << cfg.n_airports;
     out << YAML::Key << "Towers amount factor" << YAML::Value << cfg.n_towers;
@@ -15,7 +23,7 @@ void yamlSerialize(Config& cfg, std::string fileName) {
     out << YAML::Key << "Map persistence" << YAML::Value << cfg.persistence;
     out << YAML::Key << "Map frequency" << YAML::Value << cfg.frequency;
     out << YAML::Key << "Map amplitude" << YAML::Value << cfg.amplitude;
-    out << YAML::Key << "Map octaves" << YAML::Value << cfg.octaves;
+    out << YAML::Key << "Map octaves" << YAML::Value << (int)cfg.octaves;
     out << YAML::Key << "Map randomseed" << YAML::Value << cfg.randomseed;
     out << YAML::Key << "Aircrafts desired minimum NPM" << YAML::Value << cfg.aircraftsMinNPM;
     out << YAML::Key << "Aircrafts desired maximum NPM" << YAML::Value << cfg.aircraftsMaxNPM;
@@ -25,8 +33,11 @@ void yamlSerialize(Config& cfg, std::string fileName) {
     out << YAML::Key << "Aircrafts height collision response" << YAML::Value << cfg.collisionResponseHeight;
     out << YAML::Key << "Airports minimum distance" << YAML::Value << cfg.airportsCollisionDistance;
     out << YAML::Key << "Towers minimum distance" << YAML::Value << cfg.towersCollisionDistance;
+    
+    //out << YAML::EndSeq;
 
-    out << YAML::EndSeq;
+
+    out << YAML::EndMap;
 
     std::ofstream fout(fileName);
     fout << out.c_str();
@@ -36,7 +47,8 @@ void yamlDeserialize(Config& cfg, std::string path) {
     std::ifstream stream(path);
     std::stringstream strStream;
     strStream << stream.rdbuf();
-    YAML::Node config = YAML::Load(strStream);
+    auto config = YAML::Load(strStream);
+    //config = config["Data"];
 
     cfg.n_airports = config["Aircraft amount factor"].as<float>();
     cfg.n_towers = config["Towers amount factor"].as<float>();
@@ -48,8 +60,8 @@ void yamlDeserialize(Config& cfg, std::string path) {
     cfg.persistence = config["Map persistence"].as<double>();
     cfg.frequency = config["Map frequency"].as<double>();
     cfg.amplitude = config["Map amplitude"].as<double>();
-    cfg.octaves = config["Map octaves"].as<uint8_t>();
-    cfg.randomseed = config["Map randomseed"].as<uint32_t>();
+    cfg.octaves = config["Map octaves"].as<int>();
+    cfg.randomseed = config["Map randomseed"].as<int>();
     cfg.aircraftsMinNPM = config["Aircrafts desired minimum NPM"].as<float>();
     cfg.aircraftsMaxNPM = config["Aircrafts desired maximum NPM"].as<float>();
     cfg.staticObjectsMinNPM = config["Static Objects desired minimum NPM"].as<float>();

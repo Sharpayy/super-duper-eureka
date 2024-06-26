@@ -112,7 +112,7 @@ Plane::Plane(glm::fvec2 position, float baseHeight, StaticObj* destination, uint
 }
 
 void AirCraft::onUpdate() {
-
+	
 }
 
 void AirCraft::SetAngle(float a)
