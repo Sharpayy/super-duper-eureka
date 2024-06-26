@@ -6,11 +6,6 @@ void yamlSerialize(Config& cfg, std::string fileName) {
 
     out << YAML::BeginMap;
 
-    if (out.good()) {
-        std::cout << "Failed to initialize YAML Emitter" << std::endl;
-
-    }
-
     //out << YAML::Key << "DATA" << YAML::BeginSeq;
 
     out << YAML::Key << "Aircraft amount factor" << YAML::Value << cfg.n_airports;

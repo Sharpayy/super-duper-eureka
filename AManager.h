@@ -152,6 +152,7 @@ public:
 
 		//TEXT
 		if (selectedAircraft) {
+			//float speed = 1.0f, maxDist = 0.0f;
 			ard.SetPosition({ selectedAircraft->position.x - 40, selectedAircraft->position.y - 40 });
 			ard.SetScale({ 0.7f,0.7f });
 			ard.SetHeigth(selectedAircraft->distanceToGround);

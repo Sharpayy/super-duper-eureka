@@ -59,8 +59,6 @@ public:
 
 	void ReleaseTextureData();
 
-
-
 	Texture2D getMap();
 
 	char* getData();
